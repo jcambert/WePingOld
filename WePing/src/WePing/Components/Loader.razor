@@ -1,0 +1,16 @@
+﻿@inject IStore<WePingState, IAction> store
+
+@if (store.State.IsLoading)
+{
+    <div id="preloader">
+        <div id="loader">
+        </div>
+    </div>
+}
+@code {
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+       // store.State.
+    }
+}

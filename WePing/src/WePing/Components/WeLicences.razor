@@ -1,0 +1,76 @@
+﻿@inherits WePingComponentBase
+
+@using WePing.domain.Licences.Dto
+@using WePing.domain.Licences.Queries
+
+<DynamicTag TagName="div" @attributes="UnknownParameters">
+    <button @onclick="ClearStorage">Clear</button>
+    <button @onclick="LoadData">load</button>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Nom</th>
+                <th>Prenom</th>
+                <th>Licence</th>
+                <th>Sexe</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var licence in page?.Items)
+            {
+                <tr>
+                    <td>@licence.Nom</td>
+                    <td>@licence.Prenom</td>
+                    <td>@licence.Numero</td>
+                    <td>@licence.Sexe</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</DynamicTag>
+@code {
+    IPagedResultWithLinks<LicenceDto> page => Store.State?.Licences;
+
+
+    public override void LoadData()
+    {
+        Store.Dispatch<LoadingAction>();
+        Store.Dispatch<BrowseLicencesAction>(a =>
+        {
+            a.Club = "02900041";
+
+        });
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+
+            Store.On<BrowseLicencesAction>().Subscribe((action) =>
+            {
+
+                CancellationTokenSource source = new CancellationTokenSource();
+                var t = Task.Run(async delegate
+                {
+                    var a = action as BrowseLicencesAction;
+                    var req = Spid.Licences(new BrowseLicences() { Club = a.Club, Page = 1, Results = 10 });
+                    Store.State.Licences = await req;
+                    return;
+                });
+                t.Wait();
+
+
+
+                Store.State.IsLoading = false;
+                Store.StateChanged(action);
+
+            });
+
+        }
+
+    }
+
+
+}

@@ -1,0 +1,237 @@
+﻿@page "/club/{numero}"
+@using WePing.Services
+@using WePing.domain.Clubs.Dto
+@using WePing.domain.ClubDetails.Dto
+@using WePing.domain.Licences.Dto
+@using WePing.domain.Equipes.Dto
+@using WePing.domain.Organismes.Dto
+@using System.Reactive.Linq
+@using WeChart
+<WeRow Class="d-none d-md-block">
+    @if (Licencies.HasItems)
+    {
+        <WeStatTile>
+            <Top><i class="fa fa-user"></i> Nombre de Licencies</Top>
+            <Content>@Licencies.TotalResults</Content>
+        </WeStatTile>
+        <WeStatTile>
+            <Top><i class="fas fa-male"></i> Hommes/Femmes <i class="fas fa-female"></i></Top>
+            <Content>@(Licencies.Items.Where(x=>x.Sexe=="M").Count()) / @(Licencies.Items.Where(x=>x.Sexe=="F").Count())</Content>
+            <Bottom>@CalculatePct(Licencies.Items.Where(x => x.Sexe == "M").Count(), Licencies.Items.Count)% / @CalculatePct(Licencies.Items.Where(x => x.Sexe == "F").Count(), Licencies.Items.Count)%</Bottom>
+        </WeStatTile>
+        <WeStatTile>
+            <Top><i class="fas fa-arrow-up"></i> Progression</Top>
+            <Content>@(Licencies.Items.Where(x=>x.NValeurIntitial<= x.NAncienPointsMensuel).Count()) </Content>
+            <Bottom><i class="color-green">@(CalculatePct(Licencies.Items.Where(x => x.NValeurIntitial <= x.NAncienPointsMensuel).Count(),Licencies.Items.Count)) %</i> des licenciés</Bottom>
+        </WeStatTile>
+        <WeStatTile>
+            <Top><i class="fas fa-arrow-down"></i> Regression</Top>
+            <Content>@(Licencies.Items.Where(x => x.NValeurIntitial > x.NAncienPointsMensuel).Count()) </Content>
+            <Bottom><i class="color-red">@(CalculatePct(Licencies.Items.Where(x => x.NValeurIntitial > x.NAncienPointsMensuel).Count(),Licencies.Items.Count)) % </i> des licenciés</Bottom>
+        </WeStatTile>
+    }
+
+
+</WeRow>
+<WeRow>
+
+    <WeWidget Columns="new List<WeColumn>() { WeColumn.sm12, WeColumn.md4 }" Class="we_profile_box">
+        <WePanel Class="">
+            <Title>
+                <WePanelTitle Title="Club" IsCloseable="true" IsCollapseable="true"></WePanelTitle>
+            </Title>
+            <Content>
+                <WePanelContent>
+                    <div class="we_flex">
+                        <ul class="list-inline list-profile1">
+
+                            <li>
+                                <a>
+                                    <i class="fab fa-facebook"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <img src="_content/WeStrap/img/home.png" alt="..." class="img-circle profile_img">
+                            </li>
+                            <li>
+                                <a>
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <h3 class="name">@ClubInfo?.Nom</h3>
+                    <div class="flex">
+                        <ul class="list-inline list-profile2">
+                            <li>
+                                <h3>@EquipePhase1.Count()</h3>
+                                <span>Equipes Phase 1</span>
+                            </li>
+                            <li>
+                                <h3>@EquipePhase2.Count()</h3>
+                                <span>Equipes Phase 2</span>
+                            </li>
+
+                        </ul>
+                    </div>
+                    <WeRow>
+                        <WeCol Columns="new List<WeColumn>() {WeColumn.md9 }">
+                            @ClubDetail?.NomSalle<br />
+                            @ClubDetail?.AdresseSalle1<br />
+                            @ClubDetail?.CodePostalSalle &nbsp; @ClubDetail?.VilleSalle
+                        </WeCol>
+                        <WeCol Columns="new List<WeColumn>() {WeColumn.md3 }">
+                            <WeButton Id="locationBtn" OnClick="@((evt)=>ShowLocation(ClubDetail.Longitude,ClubDetail.Latitude))"><span class="fas fa-map-marker-alt"></span></WeButton>
+                            <WeTooltip Target="locationBtn" Placement="Placement.Bottom">Voir sur la Carte</WeTooltip>
+                        </WeCol>
+                    </WeRow>
+                </WePanelContent>
+            </Content>
+        </WePanel>
+
+    </WeWidget>
+
+    <WeWidget Columns="new List<WeColumn>() { WeColumn.sm12, WeColumn.md8 }">
+        <WePanel>
+            <Title>
+                <WePanelTitle Title="Catégorie d'age" IsCloseable="true" IsCollapseable="true">
+                <ToolBox>
+                    <WeDropdown>
+                        <WeDropdownToggle Color="Color.None">Graphiques</WeDropdownToggle>
+                        <WeDropdownMenu>
+                            <WeDropdownItem>Catégorie d'age</WeDropdownItem>
+                            <WeDropdownItem>Classement</WeDropdownItem>
+                            <WeDropdownItem>Points Mensuels</WeDropdownItem>
+                            <WeDropdownItem>Progression Mensuelles</WeDropdownItem>
+                            <WeDropdownItem>Progression Saison</WeDropdownItem>
+                        </WeDropdownMenu>
+                    </WeDropdown>
+                </ToolBox>
+                </WePanelTitle>
+            </Title>
+            <Content>
+                <WeContainer>
+                    <WeRow>
+                        @if (AppState.Store.State.LicenciesParCategorie?.Any() ?? false)
+                        {
+                            <WeCol Columns="new List<WeColumn>() {WeColumn.md12 }">
+                                <table style="width:100%">
+                                    <tbody>
+                                        <tr>
+                                            <th style="width:37%">&nbsp;</th>
+                                            <th>&nbsp;</th>
+                                        </tr>
+                                        <tr>
+                                            <td>
+                                                <Chart Options="ChartOptions" DefaultChartType="doughnut" Labels="AppState.Store.State.LicenciesParCategorie.Select(x=>x.GetCategorie())">
+                                                    <WeSerie @ref="SerieCategorie" Backgrounds="WeC.WeColor.Random(AppState.Store.State.LicenciesParCategorie.Count)" Label="Repartition" Values="AppState.Store.State.LicenciesParCategorie.Select(x=>(double) x.Total).ToList()" TDataset="Dataset"></WeSerie>
+                                                </Chart>
+                                            </td>
+                                            <td>
+                                                <WeTable IsBordered="true" Items="AppState.Store.State.LicenciesParCategorie" TItem=" LicenceCategorie">
+                                    <THead>
+                                        <WeTableCell>&nbsp;</WeTableCell>
+                                        <WeTableCell>Categorie</WeTableCell>
+                                        <WeTableCell>#</WeTableCell>
+                                        <WeTableCell>%</WeTableCell>
+                                    </THead>
+                                    <TBody Context="ctx">
+                                        <WeTableCell Class="px-2 py-2"><div style="@GetSerieBackground(ctx.Index)">&nbsp;</div></WeTableCell>
+                                        <WeTableCell>@ctx.Item.GetCategorie()</WeTableCell>
+                                        <WeTableCell>@ctx.Item.Total</WeTableCell>
+                                        <WeTableCell>@ctx.Item.Pourcentage %</WeTableCell>
+                                    </TBody>
+                                    </WeTable>
+                                    </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </WeCol>
+                        }
+                    </WeRow>
+                </WeContainer>
+            </Content>
+        </WePanel>
+    </WeWidget>
+    <EquipeTable Phase="2" />
+    <EquipeTable Phase="1" />
+</WeRow>
+
+@code {
+    [CascadingParameter] public ReduxDevTools<WePingState, IAction> AppState { get; set; }
+    [Parameter] public string Numero { get; set; }
+    private WeSerie<Dataset> SerieCategorie { get; set; }
+    public ClubDto ClubInfo => AppState.Store.State.Club;
+    public ClubDetailDto ClubDetail => AppState.Store.State.ClubDetail;
+    public IPagedResultWithLinks<LicenceDto> Licencies => AppState.Store.State.LicencesForClubs;
+    public List<EquipeDto> EquipePhase1 => AppState.Store.State.EquipePhase1;
+    public List<EquipeDto> EquipePhase2 => AppState.Store.State.EquipePhase2;
+    public IPagedResultWithLinks<OrganismeDto> Organismes => AppState.Store.State.Organismes;
+
+    private string GetSerieBackground(int index) =>
+        $"background-color:{SerieCategorie.Backgrounds[index].ToRGB()}";
+
+
+    private OrganismeDto GetOrganisme(string id) =>
+    Organismes.Items.Where(o => o.Id == id).FirstOrDefault();
+
+    private IOptions ChartOptions =>
+        new Options() { Title = new OptionTitle() { Display = false }, Legend = new OptionLegend() { Display = false } };
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        AppState.Store.OnChanged.Subscribe(state =>
+        {
+            InvokeAsync(() => StateHasChanged());
+        });
+
+        AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowseEquipeAction)).Subscribe(mutation =>
+        {
+            var eqs = mutation.State.Equipes.Items.ToObservable();
+            eqs.SubscribeAsync(equipe => AppState.Store.DispatchAsync<BrowseResultatEquipeClassementAction>(a => a.Equipe = equipe));
+        });
+
+        /*   AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowseLicencesForClubAction)).Subscribe(mutation =>
+           {
+               var cats = from lic in AppState.Store.State.LicencesForClubs.Items where lic.Numero == "745888" select lic;
+               var l = cats.FirstOrDefault();
+               if (l != null)
+               {
+                   var c = Licencies.Items.Where(x => x.NValeurIntitial <= x.NAncienPointsMensuel).Count();
+                   var tot = Licencies.Items.Count;
+                   var pct = (1.0 * c )/ tot * 100;
+
+                   var pct1 = CalculatePct(Licencies.Items.Where(x => x.NValeurIntitial <= x.NAncienPointsMensuel).Count(), Licencies.Items.Count);
+               }
+           });*/
+    }
+    private int CalculatePct(int count, int total) =>(int)( (1.0 * count) / total * 100);
+
+    private void ShowLocation(string lon, string lat)
+    {
+        //var cats = from lic in Licencies.Items orderby lic.Categorie group lic by lic.Categorie;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            await AppState.Store.DispatchAsync<BrowseOrganismesAction>
+                (a => { });
+            await AppState.Store.DispatchAsync<GetClubAction>
+                (a => a.Numero = Numero);
+            await AppState.Store.DispatchAsync<BrowseClubDetailAction>
+                (a => a.Numero = Numero);
+            await AppState.Store.DispatchAsync<BrowseLicencesForClubAction>
+                (a => a.Numero = Numero);
+            await AppState.Store.DispatchAsync<BrowseEquipeAction>
+                (a => a.Numero = Numero);
+        }
+    }
+
+
+
+}

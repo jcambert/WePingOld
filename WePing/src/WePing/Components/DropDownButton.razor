@@ -1,0 +1,79 @@
+﻿@implements IToolBoxButton
+@typeparam TItem
+
+@inject IJSRuntime JSRuntime
+<div class="dropdown @InternalDirection">
+    <a href="#" class="dropdown-toggle @Class @InternalSize" data-toggle="dropdown" role="button" aria-expanded="false" @ref="btn" @onclick="@(() => OnClick.InvokeAsync(btn))"><i class="fa fa-@Icon"></i></a>
+    <div class="dropdown-menu @InternalAlignment" aria-labelledby="dropdownMenuButton" style="z-index:1070;">
+        @foreach (var item in Items)
+        {
+        <a class="dropdown-item @(item.Disabled ? "disabled" : "")" href="#" @key="item" @onclick="@(() => InternalOnMenuClick(item))" aria-disabled="@(item.Disabled ? "true" : "false")">
+            @if (item.Divider)
+            {
+                <div class="dropdown-divider"></div>
+            }
+            else if (!string.IsNullOrEmpty(item.Header))
+            {
+                <h6 class="dropdown-header">@item.Header</h6>
+            }
+            else
+            {
+                @ItemTemplate(item.Value)
+            }
+        </a>
+
+        }
+
+    </div>
+</div>
+
+@code {
+    [CascadingParameter]
+    public Widget Widget { get; set; }
+
+    ElementReference btn;
+
+    [Parameter] public EventCallback<ElementReference> OnClick { get; set; }
+
+    [Parameter]
+    public EventCallback<DropDownItem<TItem>> OnMenuClick { get; set; }
+    private void InternalOnMenuClick(DropDownItem<TItem> item)
+    {
+        if (!item.Disabled && !string.IsNullOrEmpty(item.Header) && !item.Divider)
+            OnMenuClick.InvokeAsync(item);
+    }
+
+    [Parameter]
+    public IReadOnlyList<DropDownItem<TItem>> Items { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem> ItemTemplate { get; set; }
+
+    [Parameter]
+    public string Icon { get; set; } = "wrench";
+
+    [Parameter]
+    public string Class { get; set; } = "";
+
+    [Parameter]
+    public Media Size { get; set; } = Media.None;
+
+    [Parameter]
+    public Direction Direction { get; set; } = Direction.Down;
+
+    [Parameter]
+    public Direction Alignment { get; set; } = Direction.Left;
+
+    private String InternalSize
+    {
+        get
+        {
+            if (Media.None == this.Size) return "";
+            return $"btn-{Size.GetDescription()}";
+        }
+    }
+
+    private string InternalDirection=>$"drop{ Direction.GetDescription()}";
+
+    private string InternalAlignment => $"dropdown-menu-{Alignment.GetDescription()}";
+}

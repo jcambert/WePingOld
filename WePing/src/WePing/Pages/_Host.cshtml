@@ -1,0 +1,35 @@
+﻿@page "/"
+@namespace WePing.Pages
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@addTagHelper *,WeReduxBlazor
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WePing</title>
+    <base href="~/" />
+
+    <link id="westrap-theme" rel="stylesheet" href="_content/WeStrap/css/bootstrap.css" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css" rel="stylesheet" crossorigin="anonymous">
+    <link rel="stylesheet" href="~/css/site/site.css" />
+    <script src="_content/WeReduxBlazor/js/weredux.js"></script>
+    <script src="_content/WeReduxBlazor/js/storage.js"></script>
+</head>
+<body>
+
+    <app>
+        <component type="typeof(App)" render-mode="ServerPrerendered" />
+    </app>
+
+
+
+    <script src="_framework/blazor.server.js"></script>
+    <script src="_content/WeQuery/wequery.js"></script>
+    <script src="_content/WeStrap/js/westrap.js"></script>
+    <script src="_content/WeChart/Chart.bundle.js"></script>
+    <script src="_content/WeChart/wechart.js"></script>
+    <script src="~/js/site.js"></script>
+
+</body>
+</html>

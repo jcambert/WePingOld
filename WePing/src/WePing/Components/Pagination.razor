@@ -1,0 +1,128 @@
+﻿<nav aria-label="Page navigation ">
+    <ul class="pagination">
+        @foreach (var item in Items)
+        {
+            <li class="page-item @(item.Disable?"disabled":"")  @(item.Active?"active":"") ">
+                <a class="page-link" href="#" @onclick="@(()=>ChangeToPage(item.Value))">
+                    @if (item.HasIcon)
+                    {
+                        <span aria-hidden="true" class="fa fa-@item.Icon"></span>
+                    }
+                    else if (item.HasLabel)
+                    {
+                        @item.Label
+                    }
+                </a>
+            </li>
+        }
+
+    </ul>
+</nav>
+
+@code {
+    int _currentPage = 1;
+    bool _onLoading;
+    [Parameter]
+    public bool OnLoading
+    {
+        get
+        {
+            return _onLoading;
+        }
+        set
+        {
+            _onLoading = value;
+            DisableAndActive();
+        }
+    }
+    [Parameter]
+    public bool HasPrevious { get; set; } = true;
+    [Parameter]
+    public string PreviousLabel { get; set; } = "Precedent";
+    [Parameter]
+    public string PreviousIcon { get; set; }
+    [Parameter]
+    public bool HasNext { get; set; } = true;
+    [Parameter]
+    public string NextLabel { get; set; } = "Suivant";
+    [Parameter]
+    public string NextIcon { get; set; }
+    [Parameter]
+    public int CurrentPage
+    {
+        get
+        {
+            return _currentPage;
+        }
+        set
+        {
+            _currentPage = value;
+            DisableAndActive();
+        }
+    }
+    [Parameter]
+    public int MinPage { get; set; } = 1;
+    [Parameter]
+    public int TotalPage { get; set; } = 10;
+    [Parameter]
+    public int Step { get; set; } = 1;
+    [Parameter]
+    public EventCallback<int> OnPageClicked { get; set; }
+    public void ChangeToPage(int value)
+    {
+        OnPageClicked.InvokeAsync(value);
+        CurrentPage = value;
+    }
+    public List<PaginationItem> Items { get; set; } = new List<PaginationItem>();
+
+    private void DisableAndActive()
+    {
+        foreach (var item in Items)
+        {
+            if (_onLoading)
+            {
+                item.Disable = true;
+            }
+            else
+            {
+                if (item.IsPrevious)
+                {
+                    item.Value = CurrentPage - 1;
+                }
+                if (item.IsNext)
+                    item.Value = CurrentPage + 1;
+                item.Disable = (item.IsNext ? (CurrentPage + 1 > TotalPage) : item.IsPrevious ? (CurrentPage - 1 < MinPage) : false);
+                item.Active = (!item.IsNext && !item.IsPrevious && item.Value == CurrentPage);
+            }
+        }
+    }
+
+
+    protected override Task OnInitializedAsync()
+    {
+        if (HasPrevious)
+            Items.Add(new PaginationItem() { Icon = PreviousIcon, Label = PreviousLabel, Value = CurrentPage - 1, IsPrevious = true });
+        for (int i = MinPage; i <= TotalPage; i = i + Step)
+        {
+            Items.Add(new PaginationItem() { Label = i.ToString(), Value = i });
+        }
+        if (HasNext)
+            Items.Add(new PaginationItem() { Icon = NextIcon, Label = NextLabel, Value = CurrentPage + 1, IsNext = true });
+        DisableAndActive();
+        return base.OnInitializedAsync();
+    }
+
+    public class PaginationItem
+    {
+        public bool HasIcon => !string.IsNullOrEmpty(Icon);
+        public bool HasLabel => !string.IsNullOrEmpty(Label);
+        public string Icon { get; set; }
+        public string Label { get; set; }
+        public bool IsPrevious { get; set; }
+        public bool IsNext { get; set; }
+        public bool Active { get; set; }
+        public bool Disable { get; set; }
+
+        public int Value { get; set; }
+    }
+}

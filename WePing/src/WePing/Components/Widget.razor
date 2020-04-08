@@ -1,0 +1,63 @@
+﻿@inherits DesktopComponent
+@using  WePing.Services
+    <CascadingValue Value="this">
+        <div class="@MediaWidth @Class" @ref="widget">
+            <div class="x_panel tile @FixedHeightClass">
+                <div class="x_title">
+                    <h2>@Title</h2>
+                    <ul class="nav navbar-right panel_toolbox">
+
+                        @ToolBox
+                        @if (AddStandardToolBox)
+                        {
+                            @if (!RemoveCollapseButton)
+                            {
+                                <ToolBoxItem >
+                                    <CollapseButton @ref="CollapseBtn" OnClick="@((@ref)=> {JsRuntime.InvokeAsync<object>("desktop.WidgetToggled",widget,IsCollapsed); OnCollapsed.InvokeAsync(IsCollapsed);OnWidgetCollapsed?.Invoke(IsCollapsed); })"></CollapseButton>
+                                </ToolBoxItem>
+                            }
+                            @if (!RemoveCloseButton)
+                            {
+                                <ToolBoxItem>
+                                    <CloseButton OnClick="@((@ref)=> { JsRuntime.InvokeAsync<object>("desktop.CloseWidget", @ref);OnClose.InvokeAsync(null); })"></CloseButton>
+                                </ToolBoxItem>
+                            }
+                        }
+                    </ul>
+
+
+                    <div class="clearfix"></div>
+                </div>
+                <div class="x_content">
+                    @Content
+                </div>
+            </div>
+        </div>
+    </CascadingValue>
+
+
+@code {
+
+    [Parameter]
+    public bool AddStandardToolBox { get; set; } = true;
+
+    [Parameter]
+    public bool RemoveCloseButton { get; set; } = false;
+
+    [Parameter]
+    public bool RemoveCollapseButton { get; set; } = false;
+
+    [Parameter]
+    public EventCallback OnClose { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OnCollapsed { get; set; }
+
+    CollapseButton CollapseBtn;
+
+    public bool IsCollapsed =>CollapseBtn!=null ?  CollapseBtn?.State==CollapseState.Collapsed : false;
+
+    ElementReference widget;
+
+    public event Func<bool,Task> OnWidgetCollapsed;
+}

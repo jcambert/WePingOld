@@ -1,0 +1,35 @@
+﻿ 
+<div class="row @HiddenVisibility" >
+    <div class="tile_count">
+        @for (int i = 1; i <= TileCount; i++)
+        {
+            <TopTile TileCount="TileCount" >
+                <Top><i class="fa fa-user"></i> Average Time</Top>
+                <Center>2000</Center>
+                <Bottom><i class="green"><i class="fa fa-sort-up"></i>3% </i> From last Week</Bottom>
+            </TopTile>
+        }
+
+
+    </div>
+</div>
+
+
+
+@code {
+    [Parameter]
+    public int TileCount { get; set; }
+
+    [Parameter]
+    public string HiddenLevel { get; set; } = "";
+
+    public string HiddenVisibility { get; set; }
+
+    //
+    protected override void OnParametersSet()
+    {
+        if(!string.IsNullOrEmpty(HiddenLevel))
+        HiddenVisibility= HiddenLevel.GetBootstrapClass();
+        //style="display: inline-block;"
+    }
+}

@@ -1,0 +1,26 @@
+﻿@page "/"
+@layout DesktopLayout;
+
+    <WeRow RowColumnCount="WeRowCount.Row1">
+
+        <WeTile Columns="new List<WeColumn>() { WeColumn.lg6, WeColumn.md6, WeColumn.sm12 }" IsStatTile="true" Count=" " Icon="fas fa-user-friends" Title="Joueurs" SubTitle="Rechercher une personne" IsClickable="true" OnClick="SearchPlayer"></WeTile>
+
+        <WeTile Columns="new List<WeColumn>() { WeColumn.lg6, WeColumn.md6, WeColumn.sm12 }" IsStatTile="true" Count=" " Icon="fas fa-home" Title="Clubs" SubTitle="Rechercher un club" IsClickable="true" OnClick="SearchClub"></WeTile>
+
+    </WeRow>
+
+@code{
+
+    [CascadingParameter] public ReduxDevTools<WePingState, IAction> AppState { get; set; }
+    private void SearchPlayer()
+    {
+        Console.WriteLine("SearchPlayer");
+        AppState.Store.Dispatch<NavigateToSearchPlayer>();
+    }
+
+    private void SearchClub()
+    {
+        Console.WriteLine("SearchClub");
+        AppState.Store.Dispatch<NavigateToSearchClub>();
+    }
+}

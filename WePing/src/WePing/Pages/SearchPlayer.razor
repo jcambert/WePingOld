@@ -1,0 +1,96 @@
+﻿@page "/searchplayer"
+
+@using WePing.Models
+@using System.ComponentModel.DataAnnotations
+@using domain.Joueurs.Dto
+@inject ISpidService spid;
+<SearchForm @ref="_SearchForm">
+    <FormTemplate>
+        <WeForm Model="_SearchModel" TModel="SearchPlayerModel" ValidateOnInit="true" OnValidSubmit="TrySearching">
+            <WeDataAnnotationsValidator />
+            <WeFormTitle Title="Rechercher un Joueur"></WeFormTitle>
+
+            <WeFormGroup IsRow="true" Class="pb-2 ">
+                <WeLabel For="@(()=>_SearchModel.Nom)" Columns="_SearchForm.FormLabelColumn"></WeLabel>
+                <WeCol Columns="_SearchForm.FormInputColumn">
+                    <WeInput @bind-Value="_SearchModel.Nom" ValidateOnInput="true" ValidateOnChange="false"></WeInput>
+                </WeCol>
+            </WeFormGroup>
+            <WeFormGroup IsRow="true" Class="pb-2 ">
+                <WeLabel For="()=>_SearchModel.Prenom" Columns="_SearchForm.FormLabelColumn"></WeLabel>
+                <WeCol Columns="_SearchForm.FormInputColumn">
+                    <WeInput @bind-Value="_SearchModel.Prenom" ValidateOnInput="true" ValidateOnChange="false"></WeInput>
+                </WeCol>
+            </WeFormGroup>
+            <hr />
+            <WeFormGroup IsRow="true" Class="pb-2 ">
+                <WeLabel For="()=>_SearchModel.Licence" Columns="_SearchForm.FormLabelColumn"></WeLabel>
+                <WeCol Columns="_SearchForm.FormInputColumn">
+                    <WeInput @bind-Value="_SearchModel.Licence" ValidateOnInput="true" ValidateOnChange="false"></WeInput>
+                </WeCol>
+            </WeFormGroup>
+            <WeRow Class="we_center_content pb-5">
+                <WeButtonGroup>
+                    <WeButton ButtonType="ButtonType.Submit" Color="Color.Primary" IsLoading="AppState.Store.State.IsLoading" LoadingLabel="Recherche en cours..">Rechercher</WeButton>
+                </WeButtonGroup>
+            </WeRow>
+        </WeForm>
+    </FormTemplate>
+    <ResultTemplate>
+        @if (AppState.Store.State.Joueurs.HasItems)
+        {
+            <WeTable IsHovarable="true" Items="AppState.Store.State.Joueurs.Items" OnRowClick="(JoueurDto joueur)=>ViewJoueur(joueur)">
+                <THead>
+                    <WeTableHeadCell>Nom</WeTableHeadCell>
+                    <WeTableHeadCell>Prenom</WeTableHeadCell>
+                    <WeTableHeadCell>Club</WeTableHeadCell>
+                    <WeTableHeadCell>Classement</WeTableHeadCell>
+                </THead>
+                <TBody Context="ctx">
+                    <WeTableCell>@ctx.Item.Nom</WeTableCell>
+                    <WeTableCell>@ctx.Item.Prenom</WeTableCell>
+                    <WeTableCell>@ctx.Item.NomClub</WeTableCell>
+                    <WeTableCell>@ctx.Item.Classement</WeTableCell>
+                </TBody>
+            </WeTable>
+        }
+    </ResultTemplate>
+</SearchForm>
+
+@code {
+
+
+    public SearchForm _SearchForm { get; set; }
+    [CascadingParameter] public ReduxDevTools<WePingState, IAction> AppState { get; set; }
+    SearchPlayerModel _SearchModel { get; set; } = new SearchPlayerModel();
+
+    void TrySearching(WeEditContext<SearchPlayerModel> ctx)
+    {
+        Console.WriteLine($"Try search {ctx.Model.Nom} ");
+
+        AppState.Store.Dispatch<BrowseJoueursAction>(a =>
+        {
+            a.Model = ctx.Model;
+
+        });
+    }
+    void ViewJoueur(JoueurDto joueur)
+    {
+        AppState.Store.Dispatch<NavigateToPlayer>(a =>
+        {
+            a.Licence = joueur.Licence;
+
+        });
+    }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        AppState.Store.OnChanged.Subscribe(state =>
+        {
+            InvokeAsync(() => StateHasChanged());
+        });
+    }
+
+}

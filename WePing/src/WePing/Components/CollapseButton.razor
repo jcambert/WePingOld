@@ -1,0 +1,21 @@
+﻿@implements IStateToolBoxButton<CollapseState>
+@inject IJSRuntime JSRuntime
+<a class="collapse-link" @ref="collapseBtn" @onclick="Toggle"><i class="fa fa-chevron-up"></i></a>
+
+@code {
+    [CascadingParameter]
+    public Widget Widget { get; set; }
+
+
+    private ElementReference collapseBtn;
+    public async Task Toggle()
+    {
+        var isCollapsed = await JSRuntime.InvokeAsync<bool>("desktop.ToggleWidget", collapseBtn);
+        State = isCollapsed ? CollapseState.Collapsed : CollapseState.NotCollapsed;
+        await OnClick.InvokeAsync(collapseBtn);
+    }
+
+    [Parameter] public EventCallback<ElementReference> OnClick { get; set; }
+
+    public CollapseState State { get; set; }
+}

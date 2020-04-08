@@ -1,0 +1,55 @@
+﻿@using WePing.domain.Equipes.Dto
+@using WePing.domain.Organismes.Dto
+<WeWidget Columns="new List<WeColumn>() { WeColumn.sm12, WeColumn.md6 }">
+    <WePanel>
+        <Title>
+            <WePanelTitle Title="@Title" IsCloseable="true" IsCollapseable="true"></WePanelTitle>
+        </Title>
+        <Content>
+            <WePanelContent>
+                <WeTable Items="Equipes" IsHovarable="true">
+                    <THead>
+                        <WeTableHeadCell>#</WeTableHeadCell>
+                        <WeTableHeadCell>Division</WeTableHeadCell>
+                        <WeTableHeadCell>Lien</WeTableHeadCell>
+                        <WeTableHeadCell>Classement</WeTableHeadCell>
+                    </THead>
+                    <TBody Context="ctx">
+                        <WeTableHeadCell>@(ctx.Index+1)</WeTableHeadCell>
+                        <WeTableCell>@ctx.Item.Division</WeTableCell>
+                        <WeTableCell>@(GetOrganisme(ctx.Item.GetCodeOrganisme())?.Libelle)</WeTableCell>
+                        <WeTableCell><h4><span class="@GetClassForClassement(ctx.Item.Classement)"> @(ctx.Item.Classement.Item1) / @(ctx.Item.Classement.Item2)</span></h4></WeTableCell>
+                    </TBody>
+                </WeTable>
+            </WePanelContent>
+        </Content>
+    </WePanel>
+</WeWidget>
+
+@code {
+    [CascadingParameter] public ReduxDevTools<WePingState, IAction> AppState { get; set; }
+    [Parameter] public int Phase { get; set; }
+    public List<EquipeDto> Equipes => Phase == 1 ? AppState.Store.State.EquipePhase1 : AppState.Store.State.EquipePhase2;
+    public IPagedResultWithLinks<OrganismeDto> Organismes => AppState.Store.State.Organismes;
+    private string Title => $"Equipes Phase {Phase}";
+    private OrganismeDto GetOrganisme(string id) =>
+    Organismes.Items.Where(o => o.Id == id).FirstOrDefault();
+    private string GetClassForClassement((int, int) clt)
+    => new WeCommon.WeStringBuilder()
+            .Add("badge")
+            .Add("badge-pill")
+            .Add("badge-success", clt.Item1 <= 2)
+            .Add("badge-primary", !(clt.Item1 <= 2 || (clt.Item1 + 1) == clt.Item2 || clt.Item1 == clt.Item2))
+            .Add("badge-warning", clt.Item1 + 1 == clt.Item2)
+            .Add("badge-danger", clt.Item1 == clt.Item2)
+            .ToString();
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+
+        AppState.Store.OnChanged.Subscribe(state =>
+        {
+            InvokeAsync(() => StateHasChanged());
+        });
+    }
+}

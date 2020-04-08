@@ -1,0 +1,62 @@
+﻿@using System.Threading;
+@using System.Threading.Tasks
+@using  MicroS_Common.Types
+
+@typeparam TItem
+
+<input type="number" @bind-value="CurrentPage" />
+<table class="table table-hover ">
+    <thead>
+        <tr>@TableHeader</tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Items.Items)
+        {
+            <tr>@RowTemplate(item)</tr>
+        }
+    </tbody>
+    <tfoot>
+        <tr>@TableFooter</tr>
+    </tfoot>
+</table>
+@if (UsePagination)
+{
+    <Pagination MinPage="1" TotalPage="Items.TotalPages" PreviousLabel="Precedent" NextLabel="Suivant" CurrentPage="CurrentPage" OnPageClicked="OnPageClicked" ></Pagination>
+}
+
+@code {
+    [Parameter]
+    // public IReadOnlyList<TItem> Items { get; set; }
+    public IPagedResultWithLinks<TItem> Items { get; set; }
+
+    [Parameter]
+    public RenderFragment TableHeader { get; set; }
+
+    [Parameter]
+    public RenderFragment<TItem> RowTemplate { get; set; }
+
+    [Parameter]
+    public RenderFragment TableFooter { get; set; }
+
+    [Parameter]
+    public bool UsePagination { get; set; } = true;
+
+    public int CurrentPage { get { return Items.CurrentPage; } set { } }
+
+
+
+    public async Task OnPageClicked(int page)
+    {
+        //CurrentPage = page;
+        //appState.SetSearching(true);
+     /*   if (appState.Query is PagedQueryBase)
+        {
+            (appState.Query as PagedQueryBase).Page = page;
+            await appState.ExecuteQuery(appState.Query);
+        }*/
+
+        //Task.Run(async () => await Task.Delay(3000)).ContinueWith(t => appState.SetSearching(false));
+
+    }
+
+}

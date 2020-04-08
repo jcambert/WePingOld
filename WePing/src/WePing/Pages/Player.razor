@@ -1,0 +1,6 @@
+﻿@page "/player/{licence}" 
+@Licence
+@code {
+    [CascadingParameter] public ReduxDevTools<WePingState, IAction> AppState { get; set; }
+    [Parameter] public string Licence { get; set; }
+}

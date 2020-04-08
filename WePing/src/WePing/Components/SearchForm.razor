@@ -1,0 +1,19 @@
+﻿
+<WeRow>
+    <WeCol Columns="new List<WeColumn>() {WeColumn.md4 }">
+        @FormTemplate
+    </WeCol>
+    <WeCol Columns="new List<WeColumn>() {WeColumn.md8 }">
+        @ResultTemplate
+    </WeCol>
+</WeRow>
+
+@code {
+    [Parameter] public RenderFragment FormTemplate { get; set; }
+    [Parameter] public RenderFragment ResultTemplate { get; set; }
+
+    [Parameter] public IReadOnlyList<WeColumn> FormColumn { get; set; } = new List<WeColumn>() { WeColumn.md4 };
+    [Parameter] public IReadOnlyList<WeColumn> FormLabelColumn { get; set; } = new List<WeColumn>() { WeColumn.lg4 };
+    [Parameter] public IReadOnlyList<WeColumn> FormInputColumn { get; set; } = new List<WeColumn>() { WeColumn.lg8 };
+    [Parameter] public IReadOnlyList<WeColumn> ResultColumn { get; set; } = new List<WeColumn>() { WeColumn.md8 };
+}

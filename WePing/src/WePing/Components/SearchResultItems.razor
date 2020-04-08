@@ -1,0 +1,76 @@
+﻿<!--
+@inherits AppStateBaseComponent
+@using  WePing.domain.Licences.Dto
+@using WePing.domain.Joueurs.Dto
+@using WePing.domain.Clubs.Dto
+@using WePing.domain.JoueurDetails.Dto;
+
+@if (AppState.SearchJoueurResult.HasItems)
+{
+    <TableItems Items="AppState.SearchJoueurResult" Context="item" TItem="JoueurDto">
+        <TableHeader>
+            <th>&nbsp;</th>
+            <th>&nbsp;</th>
+            <th>&nbsp;</th>
+            <th>&nbsp;</th>
+        </TableHeader>
+        <RowTemplate>
+            <td><span class="fa fa-user"></span></td>
+            <td>@item.Nom @item.Prenom  <br /> @item.NomClub</td>
+            @if (AppState.JoueurDetail.ContainsKey(item.Licence))
+            {
+
+                using (JoueurDetailDto detail = AppState.JoueurDetail[item.Licence])
+                {
+
+                    <td><h4><span class="badge badge-primary badge-pill">@detail.Classement</span></h4></td>
+                    <td>
+                        <button type="button" class="btn btn-success"><span class="fa fa-street-view"></span></button>
+                    </td>
+                }
+
+            }
+            else
+            {
+                <td><h4><span class="badge badge-dark badge-pill">P</span></h4></td>
+                <td>&nbsp;</td>
+            }
+
+
+        </RowTemplate>
+    </TableItems>
+}
+@if (AppState.SearchLicenceResult.HasItems)
+{
+    <TableItems Items="AppState.SearchLicenceResult" Context="item" TItem="LicenceDto" UsePagination="false">
+        <TableHeader>
+            <th>Nom Prenom </th>
+            <th>Prenom</th>
+            <th>Club</th>
+        </TableHeader>
+        <RowTemplate>
+            <td>@($"{item.Nom} {item.Prenom}\n{item.Nomclub}") </td>
+
+            <td>@item.Nomclub</td>
+        </RowTemplate>
+    </TableItems>
+}
+@if (AppState.SearchClubResult.HasItems)
+{
+    <TableItems Items="AppState.SearchClubResult" Context="item" TItem="ClubDto">
+        <TableHeader>
+            <th>Numero</th>
+            <th>Nom</th>
+        </TableHeader>
+        <RowTemplate>
+            <td>@item.Numero</td>
+            <td>@item.Nom</td>
+        </RowTemplate>
+    </TableItems>
+}
+    -->
+
+@code {
+
+
+}

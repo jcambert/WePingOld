@@ -1,0 +1,30 @@
+﻿@inject TilesOptions options
+    <div class=" tile_stats_count @ClassLength">
+        <span class="count_top">@Top</span>
+        <div class="count">@Center</div>
+        <span class="count_bottom">@Bottom</span>
+
+    </div>
+
+@code {
+
+    [Parameter]
+    public int TileCount { get; set; }
+
+    [Parameter]
+    public RenderFragment Top{ get; set; }
+
+    [Parameter]
+    public RenderFragment Center { get; set; }
+    [Parameter]
+    public RenderFragment Bottom{ get; set; }
+
+    public string ClassLength { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        ClassLength = options[TileCount];
+    }
+
+
+}

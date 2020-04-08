@@ -1,0 +1,18 @@
+﻿@implements IToolBoxButton
+@inject IJSRuntime JSRuntime
+<a class="close-link" @ref="closeBtn" @onclick="@( (evt)=>OnClick.InvokeAsync(closeBtn))"><i class="fa fa-times"></i></a>
+
+@code {
+    [CascadingParameter]
+    public Widget Widget { get; set; }
+
+
+    ElementReference closeBtn;
+    [Parameter] public EventCallback<ElementReference> OnClick { get; set; }
+
+    
+
+
+
+
+}

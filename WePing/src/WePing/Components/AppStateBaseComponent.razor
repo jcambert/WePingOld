@@ -1,0 +1,37 @@
+﻿
+
+
+@code {
+    /*    public AppState AppState => appState;
+        protected string LastNotification { get; private set; }
+
+        protected override void OnInitialized()
+        {
+            base.OnInitialized();
+            appState.OnChange += AppStateChanged();
+            appState.OnChangeAsync += AppStateChangedAsync;
+        }
+
+        public void Dispose()
+        {
+            appState.OnChange -= AppStateChanged();
+            appState.OnChangeAsync -= AppStateChangedAsync;
+        }
+
+        private Action AppStateChanged()
+        {
+            return () => Task.Run(() => InvokeAsync(() =>
+            {
+                this.StateHasChanged();
+            }));
+        }
+
+        private async Task AppStateChangedAsync(string key)
+        {
+            await InvokeAsync(() =>
+            {
+                LastNotification = key;
+                StateHasChanged();
+            });
+        }*/
+}

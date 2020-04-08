@@ -1,0 +1,26 @@
+{
+  "generator-micros": {
+    "domain": [
+      {
+        "name": "echelon",
+        "type": "string"
+      },
+      {
+        "name": "place",
+        "type": "string"
+      },
+      {
+        "name": "point",
+        "type": "string"
+      },
+      {
+        "name": "saison",
+        "type": "string"
+      },
+      {
+        "name": "phase",
+        "type": "string"
+      }
+    ]
+  }
+}
