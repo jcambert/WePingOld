@@ -1,10 +1,9 @@
 ﻿@page "/searchclub"
-
+@inherits PingBasePage
 @using WePing.Models
 @using System.ComponentModel.DataAnnotations
-@using domain.Clubs.Dto 
-@inject ISpidService spid;
-@inject IActionService navigator
+@using domain.Clubs.Dto
+
 <SearchForm @ref="_SearchForm">
     <FormTemplate>
         <WeForm Model="_SearchModel" TModel="SearchClubModel" ValidateOnInit="true" OnValidSubmit="TrySearching">
@@ -14,7 +13,7 @@
             <WeFormGroup IsRow="true" Class="pb-2 ">
                 <WeLabel For="@(()=>_SearchModel.Ville)" Columns="_SearchForm.FormLabelColumn"></WeLabel>
                 <WeCol Columns="_SearchForm.FormInputColumn">
-                    <WeInput @bind-Value="_SearchModel.Ville" ValidateOnInput="true" ValidateOnChange="false" ></WeInput>
+                    <WeInput @bind-Value="_SearchModel.Ville" ValidateOnInput="true" ValidateOnChange="false"></WeInput>
                 </WeCol>
             </WeFormGroup>
             <WeFormGroup IsRow="true" Class="pb-2 ">
@@ -23,7 +22,7 @@
                     <WeInput @bind-Value="_SearchModel.Code" ValidateOnInput="true" ValidateOnChange="false"></WeInput>
                 </WeCol>
             </WeFormGroup>
-            
+
             <WeRow Class="we_center_content pb-5">
                 <WeButtonGroup>
                     <WeButton ButtonType="ButtonType.Submit" Color="Color.Primary" IsLoading="AppState.Store.State.IsLoading" LoadingLabel="Recherche en cours..">Rechercher</WeButton>
@@ -34,13 +33,13 @@
     <ResultTemplate>
         @if (AppState.Store.State.Clubs.HasItems)
         {
-            <WeTable Items="AppState.Store.State.Clubs.Items" OnRowClick="(ClubDto item)=>ViewClub(item)">
+            <WeTable IsHovarable="true" Items="AppState.Store.State.Clubs.Items" OnRowClick="(ClubDto item)=>ViewClub(item)" >
                 <THead>
                     <WeTableHeadCell>#</WeTableHeadCell>
                     <WeTableHeadCell>Nom</WeTableHeadCell>
                     <WeTableHeadCell>Numero</WeTableHeadCell>
                 </THead>
-                <TBody Context="ctx" >
+                <TBody Context="ctx">
                     <WeTableCell>@(ctx.Index + 1) </WeTableCell>
                     <WeTableCell>@ctx.Item.Nom</WeTableCell>
                     <WeTableCell>@ctx.Item.Numero</WeTableCell>
@@ -54,7 +53,6 @@
 
 
     public SearchForm _SearchForm { get; set; }
-    [CascadingParameter] public ReduxDevTools<WePingState, IAction> AppState { get; set; }
     SearchClubModel _SearchModel { get; set; } = new SearchClubModel();
 
     void TrySearching(WeEditContext<SearchClubModel> ctx)
@@ -75,28 +73,4 @@
         });
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
-    {
-        await base.OnAfterRenderAsync(firstRender);
-        if (firstRender)
-        {
-            /*
-            AppState.Store.On<BrowseClubsAction>().Subscribe(action =>
-            {
-
-                var t = Task.Run(async delegate
-                {
-                    var a = action as BrowseClubsAction;
-                    var req = spid.GetClubs(new WePing.domain.Clubs.Queries.BrowseClubs() { Code=a.Model.Code,Numero=a.Model.Numero,Ville=a.Model.Ville,Dep=a.Model.Dep, Page = 1, Results =50});
-                    AppState.Store.State.Clubs = await req;
-                    return;
-                });
-                Task.Delay(TimeSpan.FromSeconds(3));
-                t.Wait();
-                AppState.Store.State.IsLoading = false;
-                AppState.Store.StateChanged(action);
-            });*/
-
-        }
-    }
 }

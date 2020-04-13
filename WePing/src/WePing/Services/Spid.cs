@@ -119,6 +119,7 @@ namespace WePing.Services
         Task<JoueurDetailDto> GetJoueurDetail(GetJoueurDetail query);
         Task<ClubDetailDto> GetClubDetail(GetClubDetail query);
         Task<ClubDto> GetClub(GetClub query);
+        Task<LicenceDto> GetLicence(GetLicence query);
         Task<IPagedResultWithLinks<LicenceDto>> GetLicencesForClub(BrowseLicences query);
         Task<IPagedResultWithLinks<EquipeDto> >GetEquipes(BrowseEquipes query);
         Task<IPagedResultWithLinks<OrganismeDto>> GetOrganismes(BrowseOrganismes query);
@@ -171,6 +172,11 @@ namespace WePing.Services
             BrowseClubs _query = new BrowseClubs() { Numero = query.Numero };
             var res = await GetRequest<ClubDto, BrowseClubs>($"{_api_endpoint}/clubs",_query);
             return res.Items.FirstOrDefault();
+        }
+        public async Task<LicenceDto> GetLicence(GetLicence query)
+        {
+            var res = await GetRequest<LicenceDto>($"{_api_endpoint}/licence/{query.Licence}");
+            return res;
         }
 
         public async Task<ClubDetailDto> GetClubDetail(GetClubDetail query)

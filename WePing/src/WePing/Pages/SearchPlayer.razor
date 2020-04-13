@@ -1,5 +1,5 @@
 ﻿@page "/searchplayer"
-
+@inherits PingBasePage
 @using WePing.Models
 @using System.ComponentModel.DataAnnotations
 @using domain.Joueurs.Dto
@@ -61,7 +61,7 @@
 
 
     public SearchForm _SearchForm { get; set; }
-    [CascadingParameter] public ReduxDevTools<WePingState, IAction> AppState { get; set; }
+   // [CascadingParameter] public ReduxDevTools<WePingState, IAction> AppState { get; set; }
     SearchPlayerModel _SearchModel { get; set; } = new SearchPlayerModel();
 
     void TrySearching(WeEditContext<SearchPlayerModel> ctx)
@@ -83,7 +83,7 @@
         });
     }
 
-    protected override void OnInitialized()
+  /*  protected override void OnInitialized()
     {
         base.OnInitialized();
 
@@ -91,6 +91,6 @@
         {
             InvokeAsync(() => StateHasChanged());
         });
-    }
+    }*/
 
 }

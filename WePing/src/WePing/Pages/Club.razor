@@ -1,4 +1,6 @@
 ﻿@page "/club/{numero}"
+@inherits PingBasePage
+@inject ILogger<Club> logger
 @using WePing.Services
 @using WePing.domain.Clubs.Dto
 @using WePing.domain.ClubDetails.Dto
@@ -158,7 +160,6 @@
 </WeRow>
 
 @code {
-    [CascadingParameter] public ReduxDevTools<WePingState, IAction> AppState { get; set; }
     [Parameter] public string Numero { get; set; }
     private WeSerie<Dataset> SerieCategorie { get; set; }
     public ClubDto ClubInfo => AppState.Store.State.Club;
@@ -182,30 +183,22 @@
     {
         base.OnInitialized();
 
-        AppState.Store.OnChanged.Subscribe(state =>
-        {
-            InvokeAsync(() => StateHasChanged());
-        });
+
 
         AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowseEquipeAction)).Subscribe(mutation =>
         {
             var eqs = mutation.State.Equipes.Items.ToObservable();
-            eqs.SubscribeAsync(equipe => AppState.Store.DispatchAsync<BrowseResultatEquipeClassementAction>(a => a.Equipe = equipe));
+            ActionService.AllowStateChanged = false;
+            eqs.SubscribeAsync(equipe => AppState.Store.DispatchAsync<BrowseResultatEquipeClassementAction>(a => a.Equipe = equipe),
+                ex => logger.LogError(ex.Message),
+                () => {
+                    logger.LogInformation("Equipes are loaded");
+                    ActionService.AllowStateChanged = false;
+                    ActionService.NotifyStateChanged<BrowseResultatEquipeClassementAction>();
+                })  ;
         });
 
-        /*   AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowseLicencesForClubAction)).Subscribe(mutation =>
-           {
-               var cats = from lic in AppState.Store.State.LicencesForClubs.Items where lic.Numero == "745888" select lic;
-               var l = cats.FirstOrDefault();
-               if (l != null)
-               {
-                   var c = Licencies.Items.Where(x => x.NValeurIntitial <= x.NAncienPointsMensuel).Count();
-                   var tot = Licencies.Items.Count;
-                   var pct = (1.0 * c )/ tot * 100;
 
-                   var pct1 = CalculatePct(Licencies.Items.Where(x => x.NValeurIntitial <= x.NAncienPointsMensuel).Count(), Licencies.Items.Count);
-               }
-           });*/
     }
     private int CalculatePct(int count, int total) =>(int)( (1.0 * count) / total * 100);
 

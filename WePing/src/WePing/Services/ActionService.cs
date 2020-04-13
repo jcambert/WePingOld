@@ -1,6 +1,8 @@
 ﻿using MicroS_Common.Types;
 using Microsoft.AspNetCore.Components;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading.Tasks;
 using WePing.Actions;
 using WePing.domain.ClubDetails.Queries;
@@ -10,6 +12,7 @@ using WePing.domain.Joueurs.Queries;
 using WePing.domain.Licences.Queries;
 using WePing.domain.Organismes.Queries;
 using WePing.domain.ResultatEquipeRencontres.Queries;
+using WePing.domain.JoueurDetails.Queries;
 using WeRedux;
 
 
@@ -18,6 +21,11 @@ namespace WePing.Services
 
     public interface IActionService
     {
+        bool AllowStateChanged { get; set; }
+        void NotifyStateChanged<TAction>(TAction action)
+             where TAction : IAction;
+        void NotifyStateChanged<TAction>()
+            where TAction : IAction;
     }
     public class ActionService : IActionService
     {
@@ -55,15 +63,15 @@ namespace WePing.Services
             #region Action
             Store.On<BrowseClubsAction>().Subscribe(action =>
             {
-                var a =action as BrowseClubsAction;
+                var a = action as BrowseClubsAction;
                 ExecutePagedRequest(
                     action as BrowseClubsAction,
                     new BrowseClubs()
                     {
-                        Code=a.Model.Code,
-                        Numero=a.Model.Numero,
-                        Ville=a.Model.Ville,
-                        Dep=a.Model.Dep,
+                        Code = a.Model.Code,
+                        Numero = a.Model.Numero,
+                        Ville = a.Model.Ville,
+                        Dep = a.Model.Dep,
                         Results = Int32.MaxValue
                     },
                     Spid.GetClubs,
@@ -77,13 +85,13 @@ namespace WePing.Services
                     new BrowseJoueur()
                     {
                         Nom = ((BrowseJoueursAction)action).Model.Nom,
-                        Prenom= ((BrowseJoueursAction)action).Model.Prenom,
+                        Prenom = ((BrowseJoueursAction)action).Model.Prenom,
                         Results = Int32.MaxValue
                     },
                     Spid.GetJoueurs,
                     res => Store.State.Joueurs = res
                 );
-                
+
             });
             Store.On<GetClubAction>().Subscribe(action =>
             {
@@ -96,6 +104,30 @@ namespace WePing.Services
                     spid.GetClub,
                     res => Store.State.Club = res
                     );
+            });
+            Store.On<GetLicenceAction>().Subscribe(action =>
+            {
+                ExecuteRequest(
+                    action as GetLicenceAction,
+                    new GetLicence()
+                    {
+                        Licence=((GetLicenceAction)action).Licence
+                    },
+                    spid.GetLicence,
+                    res=>Store.State.Licence=res
+                );
+            });
+            Store.On<GetJoueurAction>().Subscribe(action =>
+            {
+                ExecuteRequest(
+                    action as GetJoueurAction,
+                    new GetJoueurDetail()
+                    {
+                        Licence = ((GetJoueurAction)action).Licence
+                    },
+                    spid.GetJoueurDetail,
+                    res => Store.State.Joueur= res
+                );
             });
             Store.On<BrowseClubDetailAction>().Subscribe(action =>
             {
@@ -173,7 +205,7 @@ namespace WePing.Services
                             bool ok = false;
                             while (idx >= 0)
                             {
-                                if(Int32.TryParse(a.Equipe.Classements[idx].Classement, out var clt1))
+                                if (Int32.TryParse(a.Equipe.Classements[idx].Classement, out var clt1))
                                 {
                                     a.Equipe.Classements[i].Classement = clt1.ToString();
                                     ok = true;
@@ -195,6 +227,26 @@ namespace WePing.Services
 
 
         #region private Methods
+        public bool AllowStateChanged { get; set; } = true;
+        private object _lastAction;
+
+        private TAction getLastAction<TAction>() where TAction : IAction
+        {
+            return (TAction) _lastAction ;
+        }
+        public void NotifyStateChanged<TAction>(TAction action)
+             where TAction : IAction
+        {
+            _lastAction = action;
+            if (AllowStateChanged)
+                Store.StateChanged<TAction>(action);
+        }
+        public void NotifyStateChanged<TAction>()
+            where TAction:IAction
+        {
+            if (AllowStateChanged)
+                Store.StateChanged<TAction>(getLastAction<TAction>());
+        }
         private void ExecuteRequest<TAction, TQuery, TDto>(TAction action, TQuery query, Func<TQuery, Task<TDto>> fn, Action<TDto> result)
             where TAction : IAction
             where TQuery : IQuery<TDto>
@@ -209,7 +261,8 @@ namespace WePing.Services
 
             t.Wait();
             Store.State.IsLoading = false;
-            Store.StateChanged<TAction>(action);
+            NotifyStateChanged(action);
+           // Store.StateChanged<TAction>(action);
         }
 
         private void ExecutePagedRequest<TAction, TQuery, TDto>(TAction action, TQuery query, Func<TQuery, Task<TDto>> fn, Action<TDto> result)
@@ -230,7 +283,8 @@ namespace WePing.Services
             }
             catch { }
             Store.State.IsLoading = false;
-            Store.StateChanged<TAction>(action);
+            NotifyStateChanged(action);
+            // Store.StateChanged<TAction>(action);
         }
         #endregion
     }

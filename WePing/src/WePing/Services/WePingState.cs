@@ -6,6 +6,7 @@ using WePing.domain.ClubDetails.Dto;
 using WePing.domain.Clubs.Domain;
 using WePing.domain.Clubs.Dto;
 using WePing.domain.Equipes.Dto;
+using WePing.domain.JoueurDetails.Dto;
 using WePing.domain.Joueurs.Dto;
 using WePing.domain.Licences.Dto;
 using WePing.domain.Organismes.Dto;
@@ -39,6 +40,9 @@ namespace WePing.Services
         public ClubDetailDto ClubDetail { get; set; } = new ClubDetailDto();
         public ClubDto Club { get; set; } = new ClubDto();
 
+        public LicenceDto Licence { get; set; }
+
+        public JoueurDetailDto Joueur { get; set; }
 
         internal List<EquipeDto> EquipePhase1 => Equipes.Items.Where(e => e.Nom.ToLower().Contains("phase 1")).ToList();
         internal List<EquipeDto> EquipePhase2 => Equipes.Items.Where(e => e.Nom.ToLower().Contains("phase 2")).ToList();

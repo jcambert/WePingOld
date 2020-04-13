@@ -1,6 +1,64 @@
-﻿@page "/player/{licence}" 
-@Licence
+﻿@page "/player/{licence}"
+@inherits PingBasePage
+@using WePing.domain.Licences.Dto
+@using  WePing.domain.JoueurDetails.Dto
+    <WeRow Class="d-none d-md-block">
+        @if (Licencie != null)
+        {
+
+            <WeStatTile>
+                <Top><i class="fa fa-user"></i>Classement</Top>
+                <Content>@((int)(Licencie.NPointsMensuel / 100))</Content>
+            </WeStatTile>
+            <WeStatTile>
+                <Top><i class="fa fa-user"></i>Points Phase 1</Top>
+                <Content>@((int)(Licencie.NValeurIntitial))</Content>
+            </WeStatTile>
+            <WeStatTile>
+                <Top><i class="fa fa-user"></i>Points Phase 2</Top>
+                <Content>@((int)(Licencie.NPoint))</Content>
+            </WeStatTile>
+            <WeStatTile>
+                <Top><i class="fa fa-user"></i>Progression Mensuelle</Top>
+                <Content>@((int)(Licencie.NPointsMensuel - Licencie.NAncienPointsMensuel))</Content>
+            </WeStatTile>
+            <WeStatTile>
+                <Top><i class="fa fa-user"></i>Progression Generale</Top>
+                <Content>@((int)(Licencie.NPointsMensuel - Licencie.NValeurIntitial))</Content>
+            </WeStatTile>
+        }
+        </WeRow>
+        <WeRow Class="d-none d-md-block">
+        @if (Joueur != null) { 
+            <WeStatTile>
+                <Top><i class="fa fa-user"></i>Rang National</Top>
+                <Content>@Joueur.ClassementGlobal </Content>
+            </WeStatTile>
+            <WeStatTile>
+                <Top><i class="fa fa-user"></i>Rang National</Top>
+                <Content>@Joueur.RangRegional </Content>
+            </WeStatTile>
+            <WeStatTile>
+                <Top><i class="fa fa-user"></i>Rang Départemental</Top>
+                <Content>@Joueur.RangDepartemental </Content>
+            </WeStatTile>
+        }
+
+
+    </WeRow>
 @code {
-    [CascadingParameter] public ReduxDevTools<WePingState, IAction> AppState { get; set; }
     [Parameter] public string Licence { get; set; }
+    public LicenceDto Licencie => AppState.Store.State.Licence;
+    public JoueurDetailDto Joueur => AppState.Store.State.Joueur;
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            await AppState.Store.DispatchAsync<GetLicenceAction>
+                (a => { a.Licence = Licence; });
+            await AppState.Store.DispatchAsync<GetJoueurAction>
+                (a => { a.Licence = Licence; });
+        }
+    }
 }

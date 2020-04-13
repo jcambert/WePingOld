@@ -42,6 +42,7 @@ namespace WePing.domain.JoueurDetails.Dto
 
         public string ValeurDebutSaison { get; set; }
 
+
         #endregion
 
 

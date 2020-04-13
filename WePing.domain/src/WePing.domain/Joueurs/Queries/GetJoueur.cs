@@ -6,7 +6,7 @@ namespace WePing.domain.Joueurs.Queries
     public class GetJoueur : IQuery<JoueurDto>
     {
         #region public properties
-
+      
         #endregion
 
     }
