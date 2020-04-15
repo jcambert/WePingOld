@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
@@ -212,17 +213,28 @@ namespace WePing.Service.Spid.Services
             var licence = licence_data.Deserialize<ListeLicences>().Licences.First();
 
             var data = await Execute(query, SpidOptions.PARTIES);
-            var data_ = await Execute(query, SpidOptions.PARTIES_);
+           // var data_ = await Execute(query, SpidOptions.PARTIES_);
             List<Partie> p1 = data.Deserialize<ListeParties>().Parties;
-            List<Partie> p2 = data_.Deserialize<ListeParties_>().Parties;
+            //List<Partie> p2 = data_.Deserialize<ListeParties_>().Parties;
+            List<Partie> p2 = new List<Partie>();
             var p3 = p2.Where(p_ => !p1.Any(p => p.Date == p_.Date && p.NomPrenomAdversaire == p_.NomPrenomAdversaire_));
             p1.AddRange(p3);
             p1.ForEach(p =>
             {
-                p.Licence ??= query.Licence;
-                p.PointsMensuel ??= licence.PointsMensuel;
-                p.Points ??= licence.Point;
-                p.PointsGagnesPerdus ??= _calculateur.Calculate(double.Parse(p.PointsMensuel), double.Parse(p.ClassementAdversaire_), ((VictoireDefaite)Enum.Parse(typeof(VictoireDefaite), p.VictoireDefaite_))).ToString();
+                try
+                {
+                    p.Licence ??= query.Licence;
+                    p.PointsMensuel ??= licence.PointsMensuel;
+                    p.Points ??= licence.Point;
+                    var b0 = double.TryParse(p.PointsMensuel,NumberStyles.Any,CultureInfo.InvariantCulture, out var pointsMensuel);
+                    if(!b0)Debugger.Break();
+                    var b1 = double.TryParse(p.ClassementAdversaire_ ?? p.ClassementAdversaire, NumberStyles.Any, CultureInfo.InvariantCulture, out var cltAdv);
+                    if (!b1) Debugger.Break();
+                    p.PointsGagnesPerdus ??= _calculateur.Calculate(pointsMensuel, cltAdv, ((VictoireDefaite)Enum.Parse(typeof(VictoireDefaite), p.VictoireDefaite_))).ToString();
+                }catch(Exception ex)
+                {
+                    Debugger.Break();
+                }
             });
             return p1;
         }

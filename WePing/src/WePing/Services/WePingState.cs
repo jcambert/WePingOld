@@ -10,6 +10,7 @@ using WePing.domain.JoueurDetails.Dto;
 using WePing.domain.Joueurs.Dto;
 using WePing.domain.Licences.Dto;
 using WePing.domain.Organismes.Dto;
+using WePing.domain.Parties.Dto;
 using WePing.domain.Profiles.Dto;
 using WePing.domain.ResultatEquipeRencontres.Dto;
 using WeReduxBlazor;
@@ -34,8 +35,9 @@ namespace WePing.Services
 
         public IPagedResultWithLinks<EquipeDto> Equipes { get; set; } = PagedResultWithLinks<EquipeDto>.Blank();
         public IPagedResultWithLinks<OrganismeDto> Organismes { get; set; } = PagedResultWithLinks<OrganismeDto>.Blank();
+        public IPagedResultWithLinks<PartieDto> Parties { get; set; } = PagedResultWithLinks<PartieDto>.Blank();
 
-
+        
 
         public ClubDetailDto ClubDetail { get; set; } = new ClubDetailDto();
         public ClubDto Club { get; set; } = new ClubDto();

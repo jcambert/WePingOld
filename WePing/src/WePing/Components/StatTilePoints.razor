@@ -1,0 +1,22 @@
+﻿@using WeCommon
+<p class="color-@GetColor()">@(Points)<i class="@ClassName">@GetIcon()</i></p>
+
+@code {
+    private string ClassName =>
+        new WeStringBuilder()
+        .Add("material-icons")
+        .Add("pl-2")
+        .Add($"size-{Size}")
+        //.Add($"color-{GetColor()}")
+        .ToString();
+
+    private string GetIcon() => Points >= 0 ? PositiveIcon : NegativeIcon;
+    private string GetColor() => Points >= 0 ? PositiveColor : NegativeColor;
+
+    [Parameter] public int Points { get; set; }
+    [Parameter] public int Size { get; set; } = 48;
+    [Parameter] public string PositiveIcon { get; set; } = "trending_up";
+    [Parameter] public string NegativeIcon { get; set; } = "trending_down";
+    [Parameter] public string PositiveColor { get; set; } = "green";
+    [Parameter] public string NegativeColor { get; set; } = "red";
+}

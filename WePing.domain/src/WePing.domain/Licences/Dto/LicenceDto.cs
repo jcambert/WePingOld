@@ -49,6 +49,13 @@ namespace WePing.domain.Licences.Dto
         public double NAncienPointsMensuel => this.GetPoints(AncienPointsMensuel);
         [JsonIgnore]
         public double NValeurIntitial => this.GetPoints(ValeurInitial);
+
+        public int Classement => (int)(NPointsMensuel / 100);
+        public int PointsMensuels => (int)(NValeurIntitial + NPointsMensuel - NValeurIntitial);
+        public int PointsPhase1 => (int)(NValeurIntitial);
+        public int PointsPhase2 => (int)(NPoint);
+        public int ProgressionMensuelle => (int)(NPointsMensuel - NAncienPointsMensuel);
+        public int ProgressionGenerale => (int)(NPointsMensuel - NValeurIntitial);
         #endregion
 
 

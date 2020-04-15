@@ -26,7 +26,7 @@ namespace WePing.domain.Parties.Dto
 
         public string NomPrenomAdversaire { get; set; }
 
-        public string PointsGagnesPerdus { get; set; }
+        public float PointsGagnesPerdus { get; set; }
 
         public string Coeficient { get; set; }
 

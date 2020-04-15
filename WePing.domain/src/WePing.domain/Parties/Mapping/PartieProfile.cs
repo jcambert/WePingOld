@@ -14,31 +14,23 @@ namespace WePing.domain.Parties.Mapping
                 .ForMember(dest => dest.ClassementAdversaire, opt => opt.MapFrom(p => p.ClassementAdversaire ?? p.ClassementAdversaire_))
                 .ForMember(dest => dest.PointsGagnesPerdus, opt => opt.MapFrom(p => CalculatePoints(p)))
                 ;
-            /*CreateMap<Partie, PartieDto>().ConstructUsing(e => 
-                new PartieDto() {
-                    Licence = e.Licence,
-                    LicenceAdversaire = e.LicenceAdversaire,
-                    VictoireDefaite = (e.VictoireDefaite ?? e.VictoireDefaite_),
-                    NumeroJournee = e.NumeroJournee,
-                    Championnat = e.Championnat,
-                    Date = e.Date,
-                    SexeAdversaire = e.SexeAdversaire,
-                    NomPrenomAdversaire = SetValue(e.NomPrenomAdversaire,e.NomPrenomAdversaire_),
-                    PointsGagnesPerdus = e.PointsGagnesPerdus,
-                    Coeficient = e.Coeficient,
-                    ClassementAdversaire = (e.ClassementAdversaire ?? e.ClassementAdversaire_) 
-                });*/
+
 
 
         }
 
-        private object CalculatePoints(Partie p)
+        private float CalculatePoints(Partie p)
         {
-            if (p.PointsGagnesPerdus == null)
+            /*if (p.PointsGagnesPerdus == null)
             {
-                return "XXX";
-            }
-            return p.PointsGagnesPerdus;
+                return 0.0f;
+            }*/
+            if (float.TryParse(p.PointsGagnesPerdus, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var result))
+                return result;
+            return 0.0f;
+
+
+            //return p.PointsGagnesPerdus;
         }
 
 

@@ -43,6 +43,13 @@ namespace WePing.domain.JoueurDetails.Dto
         public string ValeurDebutSaison { get; set; }
 
 
+        public double NPointsMensuel => this.GetPoints(PointsMensuel);
+
+        public double NAncienClassementGlobal => this.GetPoints(AncienClassementGlobal);
+
+        public double NAncienPoints => this.GetPoints(AncienPoints);
+
+        public double NPointsOfficiels => this.GetPoints(PointsOfficiels);
         #endregion
 
 

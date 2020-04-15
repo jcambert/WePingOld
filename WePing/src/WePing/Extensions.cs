@@ -94,7 +94,9 @@ namespace WePing
         };
         internal static string GetCategorie(this WePing.Services.LicenceCategorie lic)
         => categories[lic.Categorie];
+        internal static string GetCategorie(this WePing.domain.JoueurDetails.Dto.JoueurDetailDto lic)
+       => categories[lic.Categorie];
 
-        
+
     }
 }

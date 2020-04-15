@@ -14,7 +14,7 @@ using WePing.domain.Organismes.Queries;
 using WePing.domain.ResultatEquipeRencontres.Queries;
 using WePing.domain.JoueurDetails.Queries;
 using WeRedux;
-
+using WePing.domain.Parties.Queries;
 
 namespace WePing.Services
 {
@@ -220,6 +220,20 @@ namespace WePing.Services
                     }
                     a.Equipe.Classement = a.Equipe.GetClassement(a.Equipe.NumeroClub);
                 }
+                );
+            });
+            Store.On<BrowsePartiesAction>().Subscribe(action =>
+            {
+
+                ExecutePagedRequest(
+                    action as BrowsePartiesAction,
+                    new BrowseParties()
+                    {
+                        Licence = ((BrowsePartiesAction)action).Licence,
+                        Results=Int32.MaxValue
+                    },
+                    Spid.GetParties,
+                    res => Store.State.Parties = res
                 );
             });
             #endregion

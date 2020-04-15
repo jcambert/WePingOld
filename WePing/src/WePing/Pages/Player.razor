@@ -1,64 +1,152 @@
 ﻿@page "/player/{licence}"
 @inherits PingBasePage
+@using System.Reactive.Linq
 @using WePing.domain.Licences.Dto
-@using  WePing.domain.JoueurDetails.Dto
-    <WeRow Class="d-none d-md-block">
-        @if (Licencie != null)
-        {
+@using WePing.domain.JoueurDetails.Dto
+@using WePing.domain.Clubs.Dto
+@using WePing.domain.Parties.Dto
+<WeRow Class="d-none d-md-block">
+    @if (Licencie != null)
+    {
 
-            <WeStatTile>
-                <Top><i class="fa fa-user"></i>Classement</Top>
-                <Content>@((int)(Licencie.NPointsMensuel / 100))</Content>
-            </WeStatTile>
-            <WeStatTile>
-                <Top><i class="fa fa-user"></i>Points Phase 1</Top>
-                <Content>@((int)(Licencie.NValeurIntitial))</Content>
-            </WeStatTile>
-            <WeStatTile>
-                <Top><i class="fa fa-user"></i>Points Phase 2</Top>
-                <Content>@((int)(Licencie.NPoint))</Content>
-            </WeStatTile>
-            <WeStatTile>
-                <Top><i class="fa fa-user"></i>Progression Mensuelle</Top>
-                <Content>@((int)(Licencie.NPointsMensuel - Licencie.NAncienPointsMensuel))</Content>
-            </WeStatTile>
-            <WeStatTile>
-                <Top><i class="fa fa-user"></i>Progression Generale</Top>
-                <Content>@((int)(Licencie.NPointsMensuel - Licencie.NValeurIntitial))</Content>
-            </WeStatTile>
-        }
-        </WeRow>
-        <WeRow Class="d-none d-md-block">
-        @if (Joueur != null) { 
-            <WeStatTile>
-                <Top><i class="fa fa-user"></i>Rang National</Top>
-                <Content>@Joueur.ClassementGlobal </Content>
-            </WeStatTile>
-            <WeStatTile>
-                <Top><i class="fa fa-user"></i>Rang National</Top>
-                <Content>@Joueur.RangRegional </Content>
-            </WeStatTile>
-            <WeStatTile>
-                <Top><i class="fa fa-user"></i>Rang Départemental</Top>
-                <Content>@Joueur.RangDepartemental </Content>
-            </WeStatTile>
-        }
+        <WeStatTile>
+            <Top><i class="fa fa-user"></i>Classement</Top>
+            <Content><p class="@(ProgressionGenerale>=0?"color-green":"color-red")"> @Classement</p></Content>
+        </WeStatTile>
+        <WeStatTile>
+            <Top><i class="fa fa-user"></i>Points Mensuels</Top>
+            <Content><p class="@(ProgressionMensuelle>=0?"color-green":"color-red")"> @PointsMensuels</p></Content>
+        </WeStatTile>
+        <WeStatTile>
+            <Top><i class="fa fa-user"></i>Points Phase 1</Top>
+            <Content><p class="color-green"> @PointsPhase1</p></Content>
+        </WeStatTile>
+        <WeStatTile>
+            <Top><i class="fa fa-user"></i>Points Phase 2</Top>
+            <Content><p class="@(PointsPhase2>=PointsPhase1?"color-green":"color-red")"> @PointsPhase2</p></Content>
+        </WeStatTile>
+        <WeStatTile>
+            <Top><i class="fa fa-user"></i>Progression Mensuelle</Top>
+            <Content>
+                <StatTilePoints Points="ProgressionMensuelle" />
+            </Content>
+        </WeStatTile>
+        <WeStatTile>
+            <Top><i class="fa fa-user"></i>Progression Generale</Top>
+            <Content>
+                <StatTilePoints Points="ProgressionGenerale" />
+            </Content>
+        </WeStatTile>
+    }
+</WeRow>
+@if (Joueur != null )
+{
+    <WeRow Class="d-none d-md-block">
+
+        <WeStatTile>
+            <Top><i class="fa fa-user"></i>Rang National</Top>
+            <Content>@Joueur.ClassementGlobal </Content>
+        </WeStatTile>
+        <WeStatTile>
+            <Top><i class="fa fa-user"></i>Rang National</Top>
+            <Content>@Joueur.RangRegional </Content>
+        </WeStatTile>
+        <WeStatTile>
+            <Top><i class="fa fa-user"></i>Rang Départemental</Top>
+            <Content>@Joueur.RangDepartemental </Content>
+        </WeStatTile>
+
 
 
     </WeRow>
+    <WeRow>
+        <WeWidget Columns="new List<WeColumn>() { WeColumn.sm12, WeColumn.md6 }" Class="we_profile_box">
+            <WePanel Class="">
+                <Title>
+                    <WePanelTitle Title="Club" IsCloseable="true" IsCollapseable="true"></WePanelTitle>
+                </Title>
+                <Content>
+                    <WePanelContent>
+                        <div class="we_flex">
+                            <ul class="list-inline list-profile1">
+
+                               
+                                <li>
+                                    <img src="_content/WeStrap/img/user.png" alt="..." class="img-circle profile_img">
+                                </li>
+                               
+                            </ul>
+                        </div>
+                        <h3 class="name">@Joueur.Nom @Joueur.Prenom</h3>
+                        <h4>@Joueur.GetCategorie() - @Joueur.Club - Licence n° @Joueur.Licence </h4>
+                        <div class="flex">
+                            @if (Parties?.Any() ?? false)
+                            {
+                            <ul class="list-inline list-profile2">
+                                <li>
+                                    <h3>@NombreDeVictoires</h3>
+                                    <span>Victoires</span>
+                                    <p class="color-green">Points:+@PointsDeVictoire</p>
+                                    <p class="color-green">Avg:+@(PointsDeVictoire / Parties.Count())</p>
+                                    <p class="color-green">%:@(NombreDeVictoires / Parties.Count() * 100)</p>
+                                </li>
+                                <li>
+                                    <h3>@NombreDeDefaites</h3>
+                                    <span>Défaites</span>
+                                    <p class="color-red">Points:@PointsDeDefaite</p>
+                                    <p class="color-red">Avg:@(PointsDeDefaite / Parties.Count())</p>
+                                    <p class="color-red">%:@(NombreDeDefaites / Parties.Count() * 100)</p>
+                                </li>
+                                <li>
+                                    <h3>@NombreParties</h3>
+                                    <span>Matchs</span>
+                                    <p class="@(PointsParties >= 0 ? "color-green" : "color-red")">Points:@PointsParties</p>
+                                    <p class="@(PointsParties >= 0 ? "color-green" : "color-red")">Avg:@(PointsParties / Parties.Count())</p>
+                                </li>
+                            </ul>
+                            }
+                        </div>
+
+                    </WePanelContent>
+                </Content>
+            </WePanel>
+
+        </WeWidget>
+    </WeRow>
+}
 @code {
     [Parameter] public string Licence { get; set; }
     public LicenceDto Licencie => AppState.Store.State.Licence;
     public JoueurDetailDto Joueur => AppState.Store.State.Joueur;
+    public ClubDto Club => AppState.Store.State.Club;
+    public List<PartieDto> Parties => AppState.Store.State.Parties.Items;
+    private int NombreDeVictoires => Parties.Where(p => p.VictoireDefaite == "V").Count();
+    private int NombreDeDefaites => Parties.Where(p => p.VictoireDefaite == "D").Count();
+    private int NombreParties => Parties.Count();
+    private float PointsDeVictoire => Parties.Where(p => p.VictoireDefaite == "V").Select(p =>p.PointsGagnesPerdus).Sum();
+    private float PointsDeDefaite => Parties.Where(p => p.VictoireDefaite == "D").Select(p => p.PointsGagnesPerdus).Sum();
+    private float PointsParties => Parties.Select(p => p.PointsGagnesPerdus).Sum();
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
         if (firstRender)
         {
+            AppState.Store.OnChanged.Where(a => a.Action == typeof(GetJoueurAction)).Subscribe(
+               mutation =>
+               {
+                   AppState.Store.Dispatch<BrowsePartiesAction>(a=>a.Licence=Joueur.Licence);
+               });
             await AppState.Store.DispatchAsync<GetLicenceAction>
-                (a => { a.Licence = Licence; });
+            (a => { a.Licence = Licence; });
             await AppState.Store.DispatchAsync<GetJoueurAction>
                 (a => { a.Licence = Licence; });
         }
     }
+    private int Classement => Licencie.Classement;
+    private int PointsMensuels => Licencie.PointsMensuels;
+    private int PointsPhase1 => Licencie.PointsPhase1;
+    private int PointsPhase2 => Licencie.PointsPhase2;
+    private int ProgressionMensuelle => Licencie.ProgressionMensuelle;
+    private int ProgressionGenerale => Licencie.ProgressionGenerale;
+
 }

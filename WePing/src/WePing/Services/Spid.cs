@@ -23,6 +23,8 @@ using WePing.domain.Licences.Dto;
 using WePing.domain.Licences.Queries;
 using WePing.domain.Organismes.Dto;
 using WePing.domain.Organismes.Queries;
+using WePing.domain.Parties.Dto;
+using WePing.domain.Parties.Queries;
 using WePing.domain.ResultatEquipeRencontres.Dto;
 using WePing.domain.ResultatEquipeRencontres.Queries;
 
@@ -124,6 +126,7 @@ namespace WePing.Services
         Task<IPagedResultWithLinks<EquipeDto> >GetEquipes(BrowseEquipes query);
         Task<IPagedResultWithLinks<OrganismeDto>> GetOrganismes(BrowseOrganismes query);
         Task<IPagedResultWithLinks<ResultatEquipeClassementDto>> GetResultatEquipeClassements(BrowseResultatEquipeClassements query);
+        Task<IPagedResultWithLinks<PartieDto>> GetParties(BrowseParties query); 
         
 
     }
@@ -207,6 +210,12 @@ namespace WePing.Services
             return res;
         }
 
+        public async Task<IPagedResultWithLinks<PartieDto>> GetParties(BrowseParties query)
+        {
+            var res = await GetRequest<PartieDto, BrowseParties>($"{_api_endpoint}/parties", query);
+            return res;
+        }
+
         private async Task<IPagedResultWithLinks<T>> GetRequest<T, TQuery>(string url, TQuery query)
             where TQuery : IPagedQuery
         {
@@ -249,7 +258,7 @@ namespace WePing.Services
             return items;
         }
 
-        
+       
     }
 
     internal static class Extensions
