@@ -164,6 +164,7 @@ namespace weping.api.Controllers
         public async Task<IActionResult> GetLicences([FromQuery] BrowseLicences query)
             => Collection(await _spid.GetLicences(query));
 
+        [Cached()]
         [HttpGet("parties")]
         [AllowAnonymous]
         public async Task<IActionResult> GetParties([FromQuery] BrowseParties query)

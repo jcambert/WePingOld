@@ -1,5 +1,6 @@
 ﻿
 using MicroS_Common;
+using MicroS_Common.Mvc;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -213,12 +214,18 @@ namespace WePing.Service.Spid.Services
             var licence = licence_data.Deserialize<ListeLicences>().Licences.First();
 
             var data = await Execute(query, SpidOptions.PARTIES);
-           // var data_ = await Execute(query, SpidOptions.PARTIES_);
+            var data_ = await Execute(query, SpidOptions.PARTIES_);
             List<Partie> p1 = data.Deserialize<ListeParties>().Parties;
-            //List<Partie> p2 = data_.Deserialize<ListeParties_>().Parties;
-            List<Partie> p2 = new List<Partie>();
-            var p3 = p2.Where(p_ => !p1.Any(p => p.Date == p_.Date && p.NomPrenomAdversaire == p_.NomPrenomAdversaire_));
-            p1.AddRange(p3);
+            //List<Partie> p1 = new List<Partie>();
+            List<Partie> p2 = data_.Deserialize<ListeParties_>().Parties;
+            //List<Partie> p2 = new List<Partie>();
+            //var p3 = p2.Where(p_ => !p1.Any(p => p.Date == p_.Date && p.NomPrenomAdversaire == p_.NomPrenomAdversaire_));
+            /*var p4 = p1.GroupJoin(p2, a => a.IdPartie, b => b.IdPartie, (a, b) =>
+                     {
+                         a.Epreuve = b.Epreuve;
+                         return a;
+                     });*/
+            //p1.AddRange(p3);
             p1.ForEach(p =>
             {
                 try
@@ -231,6 +238,7 @@ namespace WePing.Service.Spid.Services
                     var b1 = double.TryParse(p.ClassementAdversaire_ ?? p.ClassementAdversaire, NumberStyles.Any, CultureInfo.InvariantCulture, out var cltAdv);
                     if (!b1) Debugger.Break();
                     p.PointsGagnesPerdus ??= _calculateur.Calculate(pointsMensuel, cltAdv, ((VictoireDefaite)Enum.Parse(typeof(VictoireDefaite), p.VictoireDefaite_))).ToString();
+                    p.Epreuve = p2.Where(_p => _p.IdPartie == p.IdPartie).FirstOrDefault()?.Epreuve ?? "";
                 }catch(Exception ex)
                 {
                     Debugger.Break();

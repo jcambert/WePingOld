@@ -11,7 +11,7 @@ namespace WePing.domain.HistoriqueClassements.Dto
 
         public string Place { get; set; }
 
-        public string Point { get; set; }
+        public double Point { get; set; }
 
         public string Saison { get; set; }
 

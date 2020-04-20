@@ -8,7 +8,7 @@ namespace WePing.domain.HistoriqueClassements.Mapping
     {
         public HistoriqueClassementProfile()
         {
-            CreateMap<HistoriqueClassement, HistoriqueClassementDto>().ConstructUsing(e => new HistoriqueClassementDto() { Echelon = e.Echelon, Place = e.Place, Point = e.Point, Saison = e.Saison, Phase = e.Phase });
+            CreateMap<HistoriqueClassement, HistoriqueClassementDto>().ConstructUsing(e => new HistoriqueClassementDto() { Echelon = e.Echelon, Place = e.Place, Point = e.Point.ToDouble(0.0f), Saison = e.Saison, Phase = e.Phase });
 
         }
     }

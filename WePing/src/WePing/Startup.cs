@@ -8,7 +8,6 @@ using System;
 using WeChart;
 using WeCommon;
 using WePing.Components;
-using WePing.Data;
 using WePing.Services;
 using WeRedux;
 using WeReduxBlazor;
@@ -40,9 +39,8 @@ namespace WePing
                 );
             services.AddServerSideBlazor();
             services.AddSingleton(Configuration.GetOptions<TilesOptions>(TilesOptions.TILES_OPTIONS));
-            services.AddSingleton<WeatherForecastService>();
+            services.AddSingleton<Helper>();
             services.AddScoped(typeof(IPagedResultWithLinks<>), typeof(PagedResultWithLinks<>));
-            //  services.AddScoped<AppState>();
 
             services.AddHttpClient<ISpidService, SpidService>(SpidService.SPID, c =>
               {

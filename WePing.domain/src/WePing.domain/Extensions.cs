@@ -53,5 +53,33 @@ namespace WePing.domain
             var member = (MemberExpression)e.Body;
             return member.Member.Name;
         }
+
+        internal static int ToInt(this string value, int defaut = 0)
+        {
+            if (Int32.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var result))
+                return result;
+            return defaut;
+        }
+
+        internal static float ToFloat(this string value, float defaut = 1.0f)
+        {
+            if (float.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var result))
+                return result;
+            return defaut; ;
+        }
+
+        internal static double ToDouble(this string value, double defaut = 0.0)
+        {
+            if (double.TryParse(value, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var result))
+                return result;
+            return defaut; ;
+        }
+
+        internal static DateTime ToDate(this string value)
+        {
+            if (DateTime.TryParse(value, out var result))
+                return result;
+            return DateTime.Now;
+        }
     }
 }

@@ -116,7 +116,7 @@
                         @if (AppState.Store.State.LicenciesParCategorie?.Any() ?? false)
                         {
                             <WeCol Columns="new List<WeColumn>() {WeColumn.md12 }">
-                                <table style="width:100%">
+                                <table style="width:100%;">
                                     <tbody>
                                         <tr>
                                             <th style="width:37%">&nbsp;</th>
@@ -125,7 +125,7 @@
                                         <tr>
                                             <td>
                                                 <Chart Options="ChartOptions" DefaultChartType="doughnut" Labels="AppState.Store.State.LicenciesParCategorie.Select(x=>x.GetCategorie())">
-                                                    <WeSerie @ref="SerieCategorie" Backgrounds="WeC.WeColor.Random(AppState.Store.State.LicenciesParCategorie.Count)" Label="Repartition" Values="AppState.Store.State.LicenciesParCategorie.Select(x=>(double) x.Total).ToList()" TDataset="Dataset"></WeSerie>
+                                                    <WeSerie @ref="SerieCategorie" Backgrounds="WeC.WeColor.Random(AppState.Store.State.LicenciesParCategorie.Count)" Label="Repartition" Values="AppState.Store.State.LicenciesParCategorie.Select(x=>(double) x.Total).ToList()"></WeSerie>
                                                 </Chart>
                                             </td>
                                             <td>
@@ -160,7 +160,7 @@
 
 @code {
     [Parameter] public string Numero { get; set; }
-    private WeSerie<Dataset> SerieCategorie { get; set; }
+    private WeSerie SerieCategorie { get; set; }
     public ClubDto ClubInfo => AppState.Store.State.Club;
     public ClubDetailDto ClubDetail => AppState.Store.State.ClubDetail;
     public IPagedResultWithLinks<LicenceDto> Licencies => AppState.Store.State.LicencesForClubs;
@@ -176,7 +176,7 @@
     Organismes.Items.Where(o => o.Id == id).FirstOrDefault();
 
     private IOptions ChartOptions =>
-        new Options() { Title = new OptionTitle() { Display = false }, Legend = new OptionLegend() { Display = false } };
+        new Options() { Title = new OptionTitle() { Display = false }, Legend = new OptionLegend() { Display = false } ,Responsive=true};
 
     protected override void OnInitialized()
     {

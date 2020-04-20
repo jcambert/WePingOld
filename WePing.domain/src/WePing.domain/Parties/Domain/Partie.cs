@@ -60,6 +60,8 @@ namespace WePing.domain.Parties.Domain
 
         [XmlElement(ElementName = "forfait")]
         public string Forfait { get; set; }
+        [XmlElement(ElementName ="idpartie")]
+        public int IdPartie { get; set; }
         [XmlElement(IsNullable = true)]
         public string PointsMensuel { get; set; } = null;
         [XmlElement(IsNullable = true)]

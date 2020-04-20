@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using WePing.domain.ClubDetails.Dto;
-using WePing.domain.Clubs.Domain;
 using WePing.domain.Clubs.Dto;
 using WePing.domain.Equipes.Dto;
+using WePing.domain.HistoriqueClassements.Dto;
 using WePing.domain.JoueurDetails.Dto;
 using WePing.domain.Joueurs.Dto;
 using WePing.domain.Licences.Dto;
 using WePing.domain.Organismes.Dto;
 using WePing.domain.Parties.Dto;
 using WePing.domain.Profiles.Dto;
-using WePing.domain.ResultatEquipeRencontres.Dto;
 using WeReduxBlazor;
 
 namespace WePing.Services
@@ -28,7 +26,8 @@ namespace WePing.Services
         public ProfileDto Profile { get; set; }
         public IPagedResultWithLinks<LicenceDto> Licences { get; set; } = PagedResultWithLinks<LicenceDto>.Blank();
         public IPagedResultWithLinks<JoueurDto> Joueurs { get; set; } = PagedResultWithLinks<JoueurDto>.Blank();
-
+        public IPagedResultWithLinks<HistoriqueClassementDto> HistoriqueClassement { get; set; } = PagedResultWithLinks<HistoriqueClassementDto>.Blank();
+        
         public IPagedResultWithLinks<ClubDto> Clubs { get; set; } = PagedResultWithLinks<ClubDto>.Blank();
 
         public IPagedResultWithLinks<LicenceDto> LicencesForClubs { get; set; } = PagedResultWithLinks<LicenceDto>.Blank();
@@ -54,10 +53,6 @@ namespace WePing.Services
         {
             get
             {
-#if DEBUG
-              //  if (LicencesForClubs.Items.Count > 0)
-               //     Debugger.Break();
-#endif
                 var cats = from lic in LicencesForClubs.Items orderby lic.Categorie group lic by lic.Categorie into g select new LicenceCategorie() { Categorie = g.Key, Total = g.Count(),Pourcentage=(int)Math.Floor( 1.0*g.Count()/ LicencesForClubs.TotalResults*100) };
                 var res= cats.ToList();
                 return res;

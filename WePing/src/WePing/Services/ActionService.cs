@@ -1,20 +1,21 @@
 ﻿using MicroS_Common.Types;
 using Microsoft.AspNetCore.Components;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.AspNetCore.Components.Routing;
 using System;
-using System.Diagnostics.CodeAnalysis;
+using System.Reactive.Linq;
 using System.Threading.Tasks;
 using WePing.Actions;
 using WePing.domain.ClubDetails.Queries;
 using WePing.domain.Clubs.Queries;
 using WePing.domain.Equipes.Queries;
+using WePing.domain.HistoriqueClassements.Queries;
+using WePing.domain.JoueurDetails.Queries;
 using WePing.domain.Joueurs.Queries;
 using WePing.domain.Licences.Queries;
 using WePing.domain.Organismes.Queries;
-using WePing.domain.ResultatEquipeRencontres.Queries;
-using WePing.domain.JoueurDetails.Queries;
-using WeRedux;
 using WePing.domain.Parties.Queries;
+using WePing.domain.ResultatEquipeRencontres.Queries;
+using WeRedux;
 
 namespace WePing.Services
 {
@@ -26,6 +27,7 @@ namespace WePing.Services
              where TAction : IAction;
         void NotifyStateChanged<TAction>()
             where TAction : IAction;
+        IObservable<LocationChangedEventArgs> OnLocationChanged { get; }
     }
     public class ActionService : IActionService
     {
@@ -39,6 +41,8 @@ namespace WePing.Services
             this.Store = store;
             this.Navigator = navigator;
             this.Spid = spid;
+
+            
 
             #region Navigation
             Store.On<NavigateToHome>().Subscribe(action => navigator.NavigateTo("/"));
@@ -92,6 +96,21 @@ namespace WePing.Services
                     res => Store.State.Joueurs = res
                 );
 
+            });
+
+            Store.On<BrowseHistoriqueClassementAction>().Subscribe(action =>
+            {
+                var a = action as BrowseHistoriqueClassementAction;
+                ExecutePagedRequest(
+                    a,
+                    new BrowseHistoriqueClassements()
+                    {
+                        NumLic=a.Licence,
+                        Results = Int32.MaxValue
+                    },
+                    Spid.GetHistoriqueClassement,
+                    res => Store.State.HistoriqueClassement = res
+                );
             });
             Store.On<GetClubAction>().Subscribe(action =>
             {
@@ -239,6 +258,12 @@ namespace WePing.Services
             #endregion
         }
 
+        public IObservable<LocationChangedEventArgs> OnLocationChanged
+            =>
+            Observable.FromEventPattern<LocationChangedEventArgs>(
+                e=>Navigator.LocationChanged+=e,
+                e => Navigator.LocationChanged -= e
+                ).Select(x=>x.EventArgs);
 
         #region private Methods
         public bool AllowStateChanged { get; set; } = true;

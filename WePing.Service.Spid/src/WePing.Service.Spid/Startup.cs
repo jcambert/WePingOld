@@ -41,6 +41,7 @@ namespace WePing.Service.Spid
             services.AddAutoMapper(Assembly.GetEntryAssembly(), typeof(DomainProfile).Assembly);
             services.AddSingleton<SpidOptions>();
             services.AddSingleton<SpidRequester>();
+            
             services.AddScoped<ISpidRequest, SpidRequest>();
             services.AddScoped<ICalculateurPoints, CalculateurPoints>();
 

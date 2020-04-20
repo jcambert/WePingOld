@@ -1,3 +1,5 @@
+using System;
+
 namespace WePing.domain.Parties.Dto
 {
     public class PartieDto
@@ -20,7 +22,7 @@ namespace WePing.domain.Parties.Dto
 
         public string Championnat { get; set; }
 
-        public string Date { get; set; }
+        public DateTime Date { get; set; }
 
         public string SexeAdversaire { get; set; }
 
@@ -28,9 +30,9 @@ namespace WePing.domain.Parties.Dto
 
         public float PointsGagnesPerdus { get; set; }
 
-        public string Coeficient { get; set; }
+        public float Coeficient { get; set; }
 
-        public string ClassementAdversaire { get; set; }
+        public int ClassementAdversaire { get; set; }
 
         #region @seexml_partie
 

@@ -1,10 +1,18 @@
 ﻿@page "/player/{licence}"
 @inherits PingBasePage
+@using System.Globalization
+@using WeChart
+@using WeC
+@using System.ComponentModel
+@using WeCommon
+@inject Helper _helper
+
 @using System.Reactive.Linq
 @using WePing.domain.Licences.Dto
 @using WePing.domain.JoueurDetails.Dto
 @using WePing.domain.Clubs.Dto
 @using WePing.domain.Parties.Dto
+@using WePing.domain.HistoriqueClassements.Dto
 <WeRow Class="d-none d-md-block">
     @if (Licencie != null)
     {
@@ -39,7 +47,7 @@
         </WeStatTile>
     }
 </WeRow>
-@if (Joueur != null )
+@if (Joueur != null)
 {
     <WeRow Class="d-none d-md-block">
 
@@ -63,47 +71,56 @@
         <WeWidget Columns="new List<WeColumn>() { WeColumn.sm12, WeColumn.md6 }" Class="we_profile_box">
             <WePanel Class="">
                 <Title>
-                    <WePanelTitle Title="Club" IsCloseable="true" IsCollapseable="true"></WePanelTitle>
+                    <WePanelTitle Title="Profile" IsCloseable="true" IsCollapseable="true">
+                        <ToolBox>
+                            <WeNavItem>
+                                <WeButton id="@ButtonClubId" ButtonType="ButtonType.Link" Color="Color.None" OnClick="() => ViewClub(Joueur.NumeroClub)">
+                                    <i class="fas fa-house-user"></i>
+                                </WeButton>
+                                <WeTooltip Target="@ButtonClubId" Placement="Placement.Bottom">Voir @Joueur.Club</WeTooltip>
+                            </WeNavItem>
+                        </ToolBox>
+                    </WePanelTitle>
                 </Title>
                 <Content>
                     <WePanelContent>
                         <div class="we_flex">
                             <ul class="list-inline list-profile1">
 
-                               
+
                                 <li>
                                     <img src="_content/WeStrap/img/user.png" alt="..." class="img-circle profile_img">
                                 </li>
-                               
+
                             </ul>
                         </div>
                         <h3 class="name">@Joueur.Nom @Joueur.Prenom</h3>
-                        <h4>@Joueur.GetCategorie() - @Joueur.Club - Licence n° @Joueur.Licence </h4>
+                        <h6>@Joueur.GetCategorie() - @Joueur.Club - Licence n° @Joueur.Licence </h6>
                         <div class="flex">
                             @if (Parties?.Any() ?? false)
                             {
-                            <ul class="list-inline list-profile2">
-                                <li>
-                                    <h3>@NombreDeVictoires</h3>
-                                    <span>Victoires</span>
-                                    <p class="color-green">Points:+@PointsDeVictoire</p>
-                                    <p class="color-green">Avg:+@(PointsDeVictoire / Parties.Count())</p>
-                                    <p class="color-green">%:@(NombreDeVictoires / Parties.Count() * 100)</p>
-                                </li>
-                                <li>
-                                    <h3>@NombreDeDefaites</h3>
-                                    <span>Défaites</span>
-                                    <p class="color-red">Points:@PointsDeDefaite</p>
-                                    <p class="color-red">Avg:@(PointsDeDefaite / Parties.Count())</p>
-                                    <p class="color-red">%:@(NombreDeDefaites / Parties.Count() * 100)</p>
-                                </li>
-                                <li>
-                                    <h3>@NombreParties</h3>
-                                    <span>Matchs</span>
-                                    <p class="@(PointsParties >= 0 ? "color-green" : "color-red")">Points:@PointsParties</p>
-                                    <p class="@(PointsParties >= 0 ? "color-green" : "color-red")">Avg:@(PointsParties / Parties.Count())</p>
-                                </li>
-                            </ul>
+                                <ul class="list-inline list-profile2">
+                                    <li>
+                                        <h5>@NombreDeVictoires</h5>
+                                        <span>Victoires</span>
+                                        <p class="color-green w700">+@Math.Round(PointsDeVictoire) Points</p>
+                                        <p class="color-green w700">+@(Math.Round( PointsDeVictoire / Parties.Count())) Points de Moyenne</p>
+                                        <p class="color-green w700">@_helper.Percentage(NombreDeVictoires, Parties.Count()) %</p>
+                                    </li>
+                                    <li>
+                                        <h5>@NombreDeDefaites</h5>
+                                        <span>Défaites</span>
+                                        <p class="color-red w700">Points:@Math.Round(PointsDeDefaite) Points</p>
+                                        <p class="color-red w700">Avg:@(Math.Round( PointsDeDefaite / Parties.Count())) Points de Moyenne</p>
+                                        <p class="color-red w700">Pct:@_helper.Percentage(NombreDeDefaites, Parties.Count()) %</p>
+                                    </li>
+                                    <li>
+                                        <h5>@NombreParties</h5>
+                                        <span>Matchs</span>
+                                        <p class="@(PointsParties >= 0 ? "color-green" : "color-red") w700">@Math.Round(PointsParties) Points</p>
+                                        <p class="@(PointsParties >= 0 ? "color-green" : "color-red") w700">@(Math.Round( PointsParties / Parties.Count())) Points de Moyenne</p>
+                                    </li>
+                                </ul>
                             }
                         </div>
 
@@ -112,20 +129,329 @@
             </WePanel>
 
         </WeWidget>
+        <WeWidget Columns="new List<WeColumn>() { WeColumn.sm12, WeColumn.md6 }">
+            <WePanel>
+
+                <Title>
+                    <WePanelTitle Title="@_graphicType.Item1">
+                        <ToolBox>
+                            @foreach (var g in GraphicTypes)
+                            {
+                                <WeNavItem>
+                                    <WeButton id="@GenerateButtonId(g.Item3)" ButtonType="ButtonType.Link" Color="Color.None" OnClick="() => ShowGraphicType(g)">
+                                        <i class="@g.Item2"></i>
+                                    </WeButton>
+                                </WeNavItem>
+                                <WeTooltip Target="@GenerateButtonId(g.Item3)" Placement="Placement.Bottom">@g.Item1 </WeTooltip>
+                            }
+                        </ToolBox>
+                    </WePanelTitle>
+
+                </Title>
+                <Content>
+                    <WeContainer>
+                        <WeRow>
+
+                            <WeCol Columns="new List<WeColumn>() {WeColumn.md12 }">
+                                <table style="width:100%">
+                                    <tr>
+                                        <td>
+                                            @if ((AppState.Store.State.HistoriqueClassement?.Items?.Any() ?? false) && (_graphicType.Item3 == GraphicType.HistoriqueClassement))
+                                            {
+                                                <Chart Options="ChartOptions" DefaultChartType="line" Labels="@HistoClassLabels">
+                                                    <WeSerie Label="Points:" Values="@HistoClassValues" LineStyle="@ls_primary"></WeSerie>
+                                                </Chart>
+                                            }
+                                            else if ((AppState.Store.State.Parties?.Items?.Any() ?? false) && (_graphicType.Item3 == GraphicType.JourneeClassement))
+                                            {
+                                                <Chart Options="ChartOptions" DefaultChartType="line" Labels="@JourneeClassement.Select(x=>x.Item1.ToString("dd MMM",CultureInfo.CurrentCulture))">
+                                                    <WeSerie Label="Points:" Values="@JourneeClassement.Select(x=>(double)x.Item2).ToList()" LineStyle="@ls_primary"></WeSerie>
+                                                </Chart>
+                                            }
+                                            else if ((AppState.Store.State.Parties?.Items?.Any() ?? false) && (_graphicType.Item3 == GraphicType.JourneePoints))
+                                            {
+                                                <Chart Options="ChartOptions" DefaultChartType="line" Labels="@JourneePoints.Select(x=>x.Item1.ToString("dd MMM",CultureInfo.CurrentCulture))">
+                                                    <WeSerie Label="Points:" Values="@JourneePoints.Select(x=>(double)x.Item2).ToList()" LineStyle="@ls_primary"></WeSerie>
+                                                </Chart>
+                                            }
+                                            else if ((AppState.Store.State.Parties?.Items?.Any() ?? false) && (_graphicType.Item3 == GraphicType.JourneeVictoireDefaite))
+                                            {
+                                                <Chart Options="ChartOptions" DefaultChartType="line" Labels="@JourneeVictoire.Select(x=>x.Item1.ToString("dd MMM",CultureInfo.CurrentCulture))">
+                                                    <WeSerie Label="Victoires:" Values="@JourneeVictoire.Select(x=>(double)x.Item2).ToList()" LineStyle="@ls_success"></WeSerie>
+                                                    <WeSerie Label="Défaites:" Values="@JourneeDefaite.Select(x=>(double)x.Item2).ToList()" LineStyle="@ls_danger"></WeSerie>
+                                                </Chart>
+                                            }
+                                            else if ((AppState.Store.State.Parties?.Items?.Any() ?? false) && (_graphicType.Item3 == GraphicType.Distribution))
+                                            {
+                                                <Chart Options="ChartDistributionOptions" DefaultChartType="bubble" >
+                                                    <WeSerieBubble Label="Victoires:" Values="DistributionPositiveValues" Backgrounds="DistributionPositiveBackground" BorderColor="DistributionPositiveBorder" HoverBackgroundColor="DistributionPositiveHoverBackground" HoverBorderWidth="DistributionPositiveHoverBorderWidth"></WeSerieBubble>
+                                                    <WeSerieBubble Label="Défaites:" Values="DistributionNegativeValues" Backgrounds="DistributionNegativeBackground" BorderColor="DistributionNegativeBorder" HoverBackgroundColor="DistributionNegativeHoverBackground" HoverBorderWidth="DistributionNegativeHoverBorderWidth"> </WeSerieBubble>
+                                                </Chart>
+                                            }
+                                        </td>
+                                    </tr>
+                                </table>
+                            </WeCol>
+
+
+                        </WeRow>
+                    </WeContainer>
+                </Content>
+            </WePanel>
+        </WeWidget>
+        <WeWidget Columns="new List<WeColumn>() { WeColumn.sm12, WeColumn.md6 }">
+            <WePanel Class="">
+                <Title>
+                    <WePanelTitle Title="@(_matchShowType.GetDescription())" IsCloseable="true" IsCollapseable="true">
+                        <ToolBox>
+                            <WeNavItem>
+                                <WeButton ButtonType="ButtonType.Link" Color="Color.None" OnClick="()=>ShowMatchType(MatchShowType.Journees)">
+                                    <i class="fas fa-list-ol"></i>
+                                </WeButton>
+                            </WeNavItem>
+                            <WeNavItem>
+                                <WeButton ButtonType="ButtonType.Link" Color="Color.None" OnClick="()=>ShowMatchType(MatchShowType.PointsAcquisCedes)">
+                                    <i class="fas fa-chart-line"></i>
+                                </WeButton>
+                            </WeNavItem>
+                            <WeNavItem>
+                                <WeButton ButtonType="ButtonType.Link" Color="Color.None" OnClick="()=>ShowMatchType(MatchShowType.ClassementAdversaire)">
+                                    <i class="fas fa-chart-pie"></i>
+                                </WeButton>
+                            </WeNavItem>
+                        </ToolBox>
+                    </WePanelTitle>
+                </Title>
+                <Content>
+                    <WePanelContent>
+                        @if (_matchShowType == MatchShowType.Journees)
+                        {
+                            <WeTable Items="PartiesGroupees" IsHovarable="true">
+                                <THead>
+                                    <WeTableHeadCell>&nbsp;</WeTableHeadCell>
+                                    <WeTableHeadCell>Classement</WeTableHeadCell>
+                                    <WeTableHeadCell>Nom Prenom</WeTableHeadCell>
+                                    <WeTableHeadCell>Points</WeTableHeadCell>
+                                </THead>
+                                <TGroup Context="group">
+                                    <WeTableRow Class="disable-hovarable table-dark">
+                                        <WeTableCell colspan="3">
+                                            <h5>@(((PartieGroupe)group).Epreuve) | Coef:@(((PartieGroupe)group).Coeficient) | @(((PartieGroupe)group).Date.ToString("d MMM"))</h5>
+                                        </WeTableCell>
+                                        <WeTableCell>
+                                            <h5>
+                                                @if (GetPointsGagnesPerdus(((PartieGroupe)group)) >= 0)
+                                                        {
+                                                    <WeBadge class="bg-green color-white">
+                                                        +@(Math.Round( GetPointsGagnesPerdus(((PartieGroupe)group)),1)  )
+                                                    </WeBadge>
+                                                        }
+                                                        else
+                                                        {
+                                                    <WeBadge class="bg-red color-white">
+                                                        @Math.Round(GetPointsGagnesPerdus(((PartieGroupe)group)), 1)
+                                                    </WeBadge>
+                                                        }
+                                            </h5>
+                                        </WeTableCell>
+                                    </WeTableRow>
+                                </TGroup>
+                                <TBodyGroup Context="partie">
+                                    <WeTableCell><span class="fa-2x fas @(GetPartie( partie).Item.SexeAdversaire=="M"?"fa-male":"fa-female")"></span></WeTableCell>
+                                    <WeTableCell Class="w700" OnCellClick="()=>ViewJoueur(GetPartie(partie).Item.LicenceAdversaire)">
+                                        <h6>@GetPartie(partie).Item.ClassementAdversaire</h6>
+                                    </WeTableCell>
+                                    <WeTableCell Class="w700" OnCellClick="()=>ViewJoueur(GetPartie(partie).Item.LicenceAdversaire)">
+                                        <h6>@GetPartie(partie).Item.NomPrenomAdversaire</h6>
+                                    </WeTableCell>
+                                    <WeTableCell OnCellClick="()=>ViewJoueur(GetPartie(partie).Item.LicenceAdversaire)">
+                                        <h6>
+                                            @if (GetPartie(partie).Item.PointsGagnesPerdus >= 0)
+                                                    {
+                                                <WeBadge class="w700 bg-green color-white">
+                                                    +@(Math.Round( GetPartie(partie).Item.PointsGagnesPerdus  ,1))
+                                                </WeBadge>
+                                                    }
+                                                    else
+                                                    {
+                                                <WeBadge class="w700 bg-red color-white">
+                                                    @Math.Round(GetPartie(partie).Item.PointsGagnesPerdus, 1)
+                                                </WeBadge>
+                                                    }
+                                        </h6>
+                                    </WeTableCell>
+                                </TBodyGroup>
+
+                            </WeTable>
+                        }
+                        @if (_matchShowType == MatchShowType.ClassementAdversaire)
+                        {
+                            <WeTable Items="ClassementGroupes" IsHovarable="true">
+                                <THead>
+                                    <WeTableHeadCell>&nbsp;</WeTableHeadCell>
+                                    <WeTableHeadCell>Nom Prenom</WeTableHeadCell>
+                                    <WeTableHeadCell>Points</WeTableHeadCell>
+                                </THead>
+                                <TGroup Context="group">
+                                    <WeTableRow Class="disable-hovarable table-dark">
+                                        <WeTableCell colspan="3">@(((ClassementGroupe)group).Classement)</WeTableCell>
+
+                                    </WeTableRow>
+                                </TGroup>
+                                <TBodyGroup Context="partie">
+                                    <WeTableCell><span class="fa-2x fas @(GetPartie( partie).Item.SexeAdversaire=="M"?"fa-male":"fa-female")"></span></WeTableCell>
+                                    <WeTableCell Class="w700" OnCellClick="()=>ViewJoueur(GetPartie(partie).Item.LicenceAdversaire)">
+                                        <h6>@GetPartie(partie).Item.NomPrenomAdversaire</h6>
+                                    </WeTableCell>
+                                    <WeTableCell OnCellClick="()=>ViewJoueur(GetPartie(partie).Item.LicenceAdversaire)">
+                                        <h6>
+                                            @if (GetPartie(partie).Item.PointsGagnesPerdus >= 0)
+                                                    {
+                                                <WeBadge class="w700 bg-green color-white">
+                                                    +@(Math.Round( GetPartie(partie).Item.PointsGagnesPerdus  ,1))
+                                                </WeBadge>
+                                                    }
+                                                    else
+                                                    {
+                                                <WeBadge class="w700 bg-red color-white">
+                                                    @Math.Round(GetPartie(partie).Item.PointsGagnesPerdus, 1)
+                                                </WeBadge>
+                                                    }
+                                        </h6>
+                                    </WeTableCell>
+                                </TBodyGroup>
+                            </WeTable>
+                        }
+                        @if (_matchShowType == MatchShowType.PointsAcquisCedes)
+                        {
+                            <WeTable Items="PointsGroupes">
+                                <THead>
+                                    <WeTableHeadCell>&nbsp;</WeTableHeadCell>
+                                    <WeTableHeadCell>Nom Prenom</WeTableHeadCell>
+                                    <WeTableHeadCell>Classement</WeTableHeadCell>
+                                </THead>
+                                <TGroup Context="group">
+                                    <WeTableRow Class="disable-hovarable table-dark">
+                                        <WeTableCell colspan="3">
+                                            <h5>
+                                                @if (((PointGroupe)group).Points >= 0)
+                                                        {
+                                                    <WeBadge class="bg-green color-white">
+                                                        +@(((PointGroupe)group).Points )
+                                                    </WeBadge>
+                                                        }
+                                                        else
+                                                        {
+                                                    <WeBadge class="bg-red color-white">
+                                                        @(((PointGroupe)group).Points)
+                                                    </WeBadge>
+                                                        }
+                                            </h5>
+                                        </WeTableCell>
+                                    </WeTableRow>
+                                </TGroup>
+                                <TBodyGroup Context="partie">
+                                    <WeTableCell><span class="fa-2x fas @(GetPartie( partie).Item.SexeAdversaire=="M"?"fa-male":"fa-female")"></span></WeTableCell>
+                                    <WeTableCell Class="w700" OnCellClick="()=>ViewJoueur(GetPartie(partie).Item.LicenceAdversaire)">
+                                        <h6>@GetPartie(partie).Item.NomPrenomAdversaire</h6>
+                                    </WeTableCell>
+                                    <WeTableCell Class="w700" OnCellClick="()=>ViewJoueur(GetPartie(partie).Item.LicenceAdversaire)">
+                                        <h6>@GetPartie(partie).Item.ClassementAdversaire</h6>
+                                    </WeTableCell>
+                                </TBodyGroup>
+                            </WeTable>
+
+                        }
+                    </WePanelContent>
+                </Content>
+            </WePanel>
+
+        </WeWidget>
+
+
     </WeRow>
 }
 @code {
-    [Parameter] public string Licence { get; set; }
-    public LicenceDto Licencie => AppState.Store.State.Licence;
-    public JoueurDetailDto Joueur => AppState.Store.State.Joueur;
-    public ClubDto Club => AppState.Store.State.Club;
-    public List<PartieDto> Parties => AppState.Store.State.Parties.Items;
-    private int NombreDeVictoires => Parties.Where(p => p.VictoireDefaite == "V").Count();
-    private int NombreDeDefaites => Parties.Where(p => p.VictoireDefaite == "D").Count();
-    private int NombreParties => Parties.Count();
-    private float PointsDeVictoire => Parties.Where(p => p.VictoireDefaite == "V").Select(p =>p.PointsGagnesPerdus).Sum();
-    private float PointsDeDefaite => Parties.Where(p => p.VictoireDefaite == "D").Select(p => p.PointsGagnesPerdus).Sum();
-    private float PointsParties => Parties.Select(p => p.PointsGagnesPerdus).Sum();
+
+    private string _licence;
+    [Parameter]
+    public string Licence
+    {
+        get => _licence;
+        set
+        {
+            if (_licence != value)
+            {
+                _licence = value;
+                //InvokeAsync(()=>LoadDatas());
+            }
+        }
+    }
+    private LicenceDto Licencie => AppState.Store.State.Licence;
+    private JoueurDetailDto Joueur => AppState.Store.State.Joueur;
+    private ClubDto Club => AppState.Store.State.Club;
+    private List<PartieDto> Parties => AppState.Store.State.Parties.Items;
+    private List<HistoriqueClassementDto> Historique => AppState.Store.State.HistoriqueClassement.Items;
+    private List<PartieDto> PartiesOrderedByPoints { get; set; }
+    private List<IGrouping<PartieGroupe, PartieDto>> PartiesGroupees { get; set; }
+    private List<IGrouping<ClassementGroupe, PartieDto>> ClassementGroupes { get; set; }
+    private List<IGrouping<PointGroupe, PartieDto>> PointsGroupes { get; set; }
+    private int NombreDeVictoires { get; set; }
+    private int NombreDeDefaites { get; set; }
+    private int NombreParties { get; set; }
+    private float PointsDeVictoire { get; set; }
+    private float PointsDeDefaite { get; set; }
+    private float PointsParties { get; set; }
+    private List<string> HistoClassLabels { get; set; }
+    private List<double> HistoClassValues { get; set; }
+    private List<(DateTime, float)> JourneePoints { get; set; }
+    private List<(DateTime, float)> JourneeClassement { get; set; }
+    private List<(DateTime, int)> JourneeVictoire { get; set; }
+    private List<(DateTime, int)> JourneeDefaite { get; set; }
+    private List<BubbleData> DistributionPositiveValues{ get; set; }
+    private List<BubbleData> DistributionNegativeValues { get; set; }
+    private List<WeColor> DistributionPositiveBackground { get; set; }
+    private List<WeColor> DistributionNegativeBackground { get; set; }
+    private List<WeColor> DistributionPositiveHoverBackground { get; set; }
+    private List<WeColor> DistributionNegativeHoverBackground { get; set; }
+    private List<WeColor> DistributionPositiveBorder { get; set; }
+    private List<WeColor> DistributionNegativeBorder { get; set; }
+    private List<int> DistributionPositiveHoverBorderWidth { get; set; }
+    private List<int> DistributionNegativeHoverBorderWidth { get; set; }
+
+    private List<string> DistributionLabels { get; set; }
+    private int Classement => Licencie.Classement;
+    private int PointsMensuels => Licencie.PointsMensuels;
+    private int PointsPhase1 => Licencie.PointsPhase1;
+    private int PointsPhase2 => Licencie.PointsPhase2;
+    private int ProgressionMensuelle => Licencie.ProgressionMensuelle;
+    private int ProgressionGenerale => Licencie.ProgressionGenerale;
+    private float GetPointsGagnesPerdus(PartieGroupe pg) => Parties.Where(p => p.Date == pg.Date).Sum(p => p.PointsGagnesPerdus);
+    private IOptions ChartOptions =>
+        new Options()
+        {
+            Title = new OptionTitle() { Display = false },
+            Legend = new OptionLegend() { Display = false },
+            Responsive = true,
+            AspectRatio = 2,
+        };
+    private IOptions ChartDistributionOptions =>
+       new Options()
+       {
+           Title = new OptionTitle() { Display = false },
+           Legend = new OptionLegend() { Display = false },
+           Responsive = true,
+           AspectRatio = 2,
+           Tooltips=new OptionTooltip()
+           {
+               Callbacks= "label:function(t,d){ return t.yLabel+' ' + d.datasets[t.datasetIndex].label +  'sur Clt:' + t.xLabel + ' Points:' + t.value ;}"
+           }
+       };
+
+    private LineStyle ls_primary { get; set; } = new LineStyle() { Background = WeColor.DarkSlateBlue, BorderStyle = new BorderStyle() { Width = 2 } };
+    private LineStyle ls_danger { get; set; } = new LineStyle() { Background = WeColor.DarkRed, BorderStyle = new BorderStyle() { Width = 2 } };
+    private LineStyle ls_success { get; set; } = new LineStyle() { Background = WeColor.DarkGreen, BorderStyle = new BorderStyle() { Width = 2 } };
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await base.OnAfterRenderAsync(firstRender);
@@ -134,19 +460,202 @@
             AppState.Store.OnChanged.Where(a => a.Action == typeof(GetJoueurAction)).Subscribe(
                mutation =>
                {
-                   AppState.Store.Dispatch<BrowsePartiesAction>(a=>a.Licence=Joueur.Licence);
+                   AppState.Store.Dispatch<BrowsePartiesAction>(a => a.Licence = Joueur.Licence);
                });
-            await AppState.Store.DispatchAsync<GetLicenceAction>
-            (a => { a.Licence = Licence; });
-            await AppState.Store.DispatchAsync<GetJoueurAction>
-                (a => { a.Licence = Licence; });
+
+            AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowsePartiesAction)).Subscribe(mutation =>
+            {
+                PartiesOrderedByPoints = AppState.Store.State.Parties.Items.OrderByDescending(p => p.PointsGagnesPerdus).ToList();
+                PartiesGroupees = (from p in Parties group p by new PartieGroupe() { Date = p.Date, Epreuve = p.Epreuve, Coeficient = p.Coeficient } into grp select grp).ToList();
+                ClassementGroupes = (from p in Parties orderby p.ClassementAdversaire descending group p by new ClassementGroupe() { Classement = p.ClassementAdversaire } into grp select grp).ToList();
+                PointsGroupes = (from p in Parties orderby p.PointsGagnesPerdus descending group p by new PointGroupe() { Points = Math.Round(p.PointsGagnesPerdus) } into grp select grp).ToList();
+                NombreDeVictoires = Parties.Where(p => p.VictoireDefaite == "V").Count();
+                NombreDeDefaites = Parties.Where(p => p.VictoireDefaite == "D").Count();
+                NombreParties = Parties.Count();
+                PointsDeVictoire = Parties.Where(p => p.VictoireDefaite == "V").Select(p => p.PointsGagnesPerdus).Sum();
+                PointsDeDefaite = Parties.Where(p => p.VictoireDefaite == "D").Select(p => p.PointsGagnesPerdus).Sum();
+                PointsParties = Parties.Select(p => p.PointsGagnesPerdus).Sum();
+
+                JourneePoints = Parties.OrderBy(x => x.Date).GroupBy(x => x.Date).Select(v => (v.Key, v.Sum(w => w.PointsGagnesPerdus))).ToList();
+                JourneeClassement = new List<(DateTime, float)>();
+
+                var firstPartie = JourneePoints.FirstOrDefault();
+                Func<int, int> calcPhase = (int month) => (month >= 1 && month <= 8) ? 2 : 1;
+
+                int year = firstPartie.Item1.Year;
+                int month = firstPartie.Item1.Month;
+                int phase = calcPhase(month);
+                JourneeClassement.Add((new DateTime(year, phase == 2 ? 1 : 9, 1), (float)PointsPhase1));
+
+                for (int i = 1; i <= JourneePoints.Count(); i++)
+                {
+                    if (calcPhase(JourneePoints[i - 1].Item1.Month) != phase)
+                    {
+                        phase = calcPhase(JourneePoints[i - 1].Item1.Month);
+                        if (phase == 2)
+                        {
+                            JourneeClassement.Add((new DateTime(year + 1, 1, 1), (float)PointsPhase2));
+                        }
+                    }
+                    JourneeClassement.Add((JourneePoints[i - 1].Item1, JourneePoints[i - 1].Item2 + JourneeClassement.Last().Item2));
+                }
+
+
+                JourneeVictoire = Parties.OrderBy(x => x.Date).GroupBy(x => x.Date).Select(v => (v.Key, v.Count(w => w.VictoireDefaite == "V"))).ToList();
+                JourneeDefaite = Parties.OrderBy(x => x.Date).GroupBy(x => x.Date).Select(v => (v.Key, v.Count(w => w.VictoireDefaite == "D"))).ToList();
+
+                DistributionPositiveValues = new List<BubbleData>();
+                DistributionNegativeValues = new List<BubbleData>();
+                DistributionPositiveBackground = new List<WeColor>();
+                DistributionNegativeBackground = new List<WeColor>();
+                DistributionPositiveBorder = new List<WeColor>();
+                DistributionNegativeBorder = new List<WeColor>();
+                DistributionPositiveHoverBackground = new List<WeColor>();
+                DistributionNegativeHoverBackground = new List<WeColor>();
+                DistributionPositiveHoverBorderWidth = new List<int>();
+                DistributionNegativeHoverBorderWidth = new List<int>();
+                DistributionLabels = new List<string>();
+                var cltMinMax = (Parties.Select(p => p.ClassementAdversaire).Min(), Parties.Select(p => p.ClassementAdversaire).Max());
+                for (int i = cltMinMax.Item1-1; i <=cltMinMax.Item2+1; i++)
+                {
+                    DistributionLabels.Add(i.ToString());
+                    var v=Parties.Where(p => p.VictoireDefaite == "V" && p.ClassementAdversaire==i).Select(p => p.PointsGagnesPerdus);
+                    var d = Parties.Where(p => p.VictoireDefaite == "D" && p.ClassementAdversaire == i).Select(p => p.PointsGagnesPerdus);
+                    if (v.Any())
+                    {
+                        DistributionPositiveValues.Add(new BubbleData() { X = i, Y = v.Count(), R = (int)(v.Sum()) });
+                        DistributionPositiveBackground.Add(WeColor.DarkGreen.AdjustAlpha(0.5));
+                        DistributionPositiveBorder.Add(WeColor.DarkGreen);
+                        DistributionPositiveHoverBackground.Add(WeColor.White.AdjustAlpha(0));
+                        DistributionPositiveHoverBorderWidth.Add(3);
+                    }
+                    if (d.Any())
+                    {
+                        DistributionNegativeValues.Add(new BubbleData() { X = i, Y = -1 * d.Count(), R = (int)(-1 * d.Sum()) });
+                        DistributionNegativeBackground.Add(WeColor.DarkRed.AdjustAlpha(0.5));
+                        DistributionNegativeBorder.Add(WeColor.DarkRed);
+                        DistributionNegativeHoverBackground.Add(WeColor.White.AdjustAlpha(0));
+                        DistributionNegativeHoverBorderWidth.Add(3);
+                    }
+                }
+                InvokeAsync(() => StateHasChanged());
+            });
+            AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowseHistoriqueClassementAction)).Subscribe(mutation =>
+            {
+                HistoClassLabels = mutation.State.HistoriqueClassement.Items.Select(h => h.Saison).ToList();
+                HistoClassValues = mutation.State.HistoriqueClassement.Items.Select(h => h.Point).ToList();
+                InvokeAsync(() => StateHasChanged());
+            });
+            await LoadDatas();
         }
     }
-    private int Classement => Licencie.Classement;
-    private int PointsMensuels => Licencie.PointsMensuels;
-    private int PointsPhase1 => Licencie.PointsPhase1;
-    private int PointsPhase2 => Licencie.PointsPhase2;
-    private int ProgressionMensuelle => Licencie.ProgressionMensuelle;
-    private int ProgressionGenerale => Licencie.ProgressionGenerale;
 
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        _graphicType = _graphicTypes.Where(x => x.Item3 == GraphicType.HistoriqueClassement).First();
+    }
+    protected override async Task LoadDatas()
+    {
+        await AppState.Store.DispatchAsync<GetLicenceAction>
+            (a => { a.Licence = Licence; });
+        await AppState.Store.DispatchAsync<GetJoueurAction>
+            (a => { a.Licence = Licence; });
+        await AppState.Store.DispatchAsync<BrowseHistoriqueClassementAction>(
+            a => { a.Licence = Licence; });
+    }
+
+    private struct PartieGroupe
+    {
+        public DateTime Date { get; set; }
+        public string Epreuve { get; set; }
+        public float Coeficient { get; set; }
+        public static bool operator ==(PartieGroupe value, PartieGroupe other) => value.Date == other.Date && value.Epreuve == other.Epreuve;
+        public static bool operator !=(PartieGroupe value, PartieGroupe other) => !(value == other);
+    }
+    private struct ClassementGroupe
+    {
+        public int Classement { get; set; }
+    }
+    private struct PointGroupe
+    {
+        public double Points { get; set; }
+    }
+
+    private enum MatchShowType
+    {
+        [Description("Journées")]
+        Journees,
+        [Description("Points Acquis/cédés")]
+        PointsAcquisCedes,
+        [Description("Classement Adversaire")]
+        ClassementAdversaire
+    }
+    private enum GraphicType
+    {
+        [Description("Historique Classement")]
+        [Icon("fas fa-chart-line")]
+        HistoriqueClassement,
+        [Description("Tendance")]
+        [Icon("fas fa-chart-pie")]
+        Tendance,
+        [Description("Distribution")]
+        [Icon("fas fa-chart-area")]
+        Distribution,
+        [Description("Resultat Mensuel")]
+        [Icon("fas fa-chart-bar")]
+        ResultatMensuel,
+        [Description("Journee classement")]
+        [Icon("fas fa-chart-line")]
+        JourneeClassement,
+        [Description("Journee points")]
+        [Icon("fas fa-chart-line")]
+        JourneePoints,
+        [Description("Journee Victoires/Défaites")]
+        [Icon("fas fa-chart-line")]
+        JourneeVictoireDefaite,
+
+    }
+    private ItemWithIndex<PartieDto> GetPartie(object o)
+    {
+        var oo = (ItemWithIndex<object>)o;
+        var p = oo.Item as PartieDto;
+        //((PartieDto)((ItemWithIndex<object>)partieGroupee).Item).SexeAdversaire
+        return new ItemWithIndex<PartieDto>() { Item = p, Index = oo.Index };
+    }
+
+    void ViewJoueur(string licence)
+    {
+        AppState.Store.Dispatch<NavigateToPlayer>(a =>
+        {
+            a.Licence = licence;
+
+        });
+    }
+
+    void ViewClub(string numero)
+    {
+        AppState.Store.Dispatch<NavigateToClub>(a =>
+        {
+            a.Numero = numero;
+
+        });
+    }
+
+    private MatchShowType _matchShowType = MatchShowType.Journees;
+    void ShowMatchType(MatchShowType type)
+    {
+        _matchShowType = type;
+    }
+
+    List<(string, string, GraphicType)> _graphicTypes = WeCommon.Extensions.GetIconAndDescription<GraphicType>();
+    private List<(string, string, GraphicType)> GraphicTypes => _graphicTypes;
+
+    private (string, string, GraphicType) _graphicType;
+    void ShowGraphicType((string, string, GraphicType) type)
+    {
+        _graphicType = type;
+    }
+    string GenerateButtonId(GraphicType type) => $"btn-{type.ToString()}";
+    string ButtonClubId = Guid.NewGuid().ToString().Replace("-", "");
 }

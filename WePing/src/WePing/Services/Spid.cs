@@ -15,6 +15,8 @@ using WePing.domain.Clubs.Dto;
 using WePing.domain.Clubs.Queries;
 using WePing.domain.Equipes.Dto;
 using WePing.domain.Equipes.Queries;
+using WePing.domain.HistoriqueClassements.Dto;
+using WePing.domain.HistoriqueClassements.Queries;
 using WePing.domain.JoueurDetails.Dto;
 using WePing.domain.JoueurDetails.Queries;
 using WePing.domain.Joueurs.Dto;
@@ -117,6 +119,7 @@ namespace WePing.Services
         Task<IPagedResultWithLinks<LicenceDto>> Licences(BrowseLicences query);
         Task<IPagedResultWithLinks<LicenceDto>> Licence(GetLicence query);
         Task<IPagedResultWithLinks<JoueurDto>> GetJoueurs(BrowseJoueur query);
+        Task<IPagedResultWithLinks<HistoriqueClassementDto>> GetHistoriqueClassement(BrowseHistoriqueClassements query);
         Task<IPagedResultWithLinks<ClubDto>> GetClubs(BrowseClubs query);
         Task<JoueurDetailDto> GetJoueurDetail(GetJoueurDetail query);
         Task<ClubDetailDto> GetClubDetail(GetClubDetail query);
@@ -164,7 +167,10 @@ namespace WePing.Services
         {
             return await GetRequest<ClubDto, BrowseClubs>($"{_api_endpoint}/clubs", query);
         }
-
+        public async Task<IPagedResultWithLinks<HistoriqueClassementDto>> GetHistoriqueClassement(BrowseHistoriqueClassements query)
+        {
+            return await GetRequest<HistoriqueClassementDto, BrowseHistoriqueClassements>($"{_api_endpoint}/histo_clas", query);
+        }
         public async Task<JoueurDetailDto> GetJoueurDetail(GetJoueurDetail query)
         {
             var res = await GetRequest<JoueurDetailDto>($"{_api_endpoint}/joueur/{query.Licence}");
@@ -258,7 +264,7 @@ namespace WePing.Services
             return items;
         }
 
-       
+        
     }
 
     internal static class Extensions

@@ -11,5 +11,10 @@
         {
             InvokeAsync(() => StateHasChanged());
         });
+        ActionService.OnLocationChanged.Subscribe(args => {
+            InvokeAsync(()=>LoadDatas());
+
+        });
     }
+
 }

@@ -1,7 +1,7 @@
 ﻿@inherits LayoutComponentBase
 @inject IActionService actions
 
-<ReduxDevTools TState="WePingState" TAction="IAction" @ref="AppState" AllowDebug="false" UseLocalStorage="false" >
+<ReduxDevTools TState="WePingState" TAction="IAction" @ref="AppState" AllowDebug="false" UseLocalStorage="false">
     <ChildContent>
         <CascadingValue Value="AppState">
             <WeDashboard Title="WePing" Icon="fas fa-table-tennis" Menus="Menus" SidebarSide="Side.Left" ShowProfile="true" OnBrandClick="NavigateToHome">
@@ -22,5 +22,8 @@
     void NavigateToHome()
     {
         AppState.Store.Dispatch<NavigateToHome>();
+
     }
+
+
 }
