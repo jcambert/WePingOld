@@ -9,6 +9,8 @@
 @using WePing.domain.Organismes.Dto
 @using System.Reactive.Linq
 @using WeChart
+@using System.ComponentModel
+@using WeCommon
 <WeRow Class="d-none d-md-block">
     @if (Licencies.HasItems)
     {
@@ -95,60 +97,130 @@
     <WeWidget Columns="new List<WeColumn>() { WeColumn.sm12, WeColumn.md8 }">
         <WePanel>
             <Title>
-                <WePanelTitle Title="Catégorie d'age" IsCloseable="true" IsCollapseable="true">
-                <ToolBox>
-                    <WeDropdown>
-                        <WeDropdownToggle Color="Color.None">Graphiques</WeDropdownToggle>
-                        <WeDropdownMenu>
-                            <WeDropdownItem>Catégorie d'age</WeDropdownItem>
-                            <WeDropdownItem>Classement</WeDropdownItem>
-                            <WeDropdownItem>Points Mensuels</WeDropdownItem>
-                            <WeDropdownItem>Progression Mensuelles</WeDropdownItem>
-                            <WeDropdownItem>Progression Saison</WeDropdownItem>
-                        </WeDropdownMenu>
-                    </WeDropdown>
-                </ToolBox>
+                <WePanelTitle Title="@_graphicType.Item1" IsCloseable="false" IsCollapseable="false">
+                    <ToolBox>
+                        @foreach (var g in GraphicTypes)
+                        {
+                            <WeNavItem>
+                                <WeButton id="@GenerateButtonId(g.Item3)" ButtonType="ButtonType.Link" Color="Color.None" OnClick="() => ShowGraphicType(g)">
+                                    <i class="@g.Item2"></i>
+                                </WeButton>
+                            </WeNavItem>
+                            <WeTooltip Target="@GenerateButtonId(g.Item3)" Placement="Placement.Bottom">@g.Item1 </WeTooltip>
+                        }
+                        
+                    </ToolBox>
                 </WePanelTitle>
             </Title>
             <Content>
                 <WeContainer>
                     <WeRow>
-                        @if (AppState.Store.State.LicenciesParCategorie?.Any() ?? false)
+                        @*Graphique categorie Age *@
+                        @if ((AppState.Store.State.LicenciesParCategorie?.Any() ?? false) && (_graphicType.Item3 == GraphicType.CategorieAge))
                         {
-                            <WeCol Columns="new List<WeColumn>() {WeColumn.md12 }">
-                                <table style="width:100%;">
-                                    <tbody>
-                                        <tr>
-                                            <th style="width:37%">&nbsp;</th>
-                                            <th>&nbsp;</th>
-                                        </tr>
-                                        <tr>
-                                            <td>
-                                                <Chart Options="ChartOptions" DefaultChartType="doughnut" Labels="AppState.Store.State.LicenciesParCategorie.Select(x=>x.GetCategorie())">
-                                                    <WeSerie @ref="SerieCategorie" Backgrounds="WeC.WeColor.Random(AppState.Store.State.LicenciesParCategorie.Count)" Label="Repartition" Values="AppState.Store.State.LicenciesParCategorie.Select(x=>(double) x.Total).ToList()"></WeSerie>
-                                                </Chart>
-                                            </td>
-                                            <td>
-                                                <WeTable IsBordered="true" Items="AppState.Store.State.LicenciesParCategorie" TItem=" LicenceCategorie">
-                                    <THead>
-                                        <WeTableCell>&nbsp;</WeTableCell>
-                                        <WeTableCell>Categorie</WeTableCell>
-                                        <WeTableCell>#</WeTableCell>
-                                        <WeTableCell>%</WeTableCell>
-                                    </THead>
-                                    <TBody Context="ctx">
-                                        <WeTableCell Class="px-2 py-2"><div style="@GetSerieBackground(ctx.Index)">&nbsp;</div></WeTableCell>
-                                        <WeTableCell>@ctx.Item.GetCategorie()</WeTableCell>
-                                        <WeTableCell>@ctx.Item.Total</WeTableCell>
-                                        <WeTableCell>@ctx.Item.Pourcentage %</WeTableCell>
-                                    </TBody>
+                            <GraphiqueClub ChartOptions="ChartOptions" Items="AppState.Store.State.LicenciesParCategorie" Labels="AppState.Store.State.LicenciesParCategorie.Select(x=>x.GetCategorie()).ToList()" Values="AppState.Store.State.LicenciesParCategorie.Select(x=>(double) x.Total).ToList()">
+                                <TTableHead>
+                                    <WeTableCell>Categorie</WeTableCell>
+                                    <WeTableCell>#</WeTableCell>
+                                    <WeTableCell>%</WeTableCell>
+                                </TTableHead>
+                                <TTableBody Context="ctx">
+
+                                    <WeTableCell>@ctx.Item.GetCategorie()</WeTableCell>
+                                    <WeTableCell>@ctx.Item.Total</WeTableCell>
+                                    <WeTableCell>@ctx.Item.Pourcentage %</WeTableCell>
+                                </TTableBody>
+                                <TooltipHeader Context="ctx">@ctx.GetCategorie()</TooltipHeader>
+                                <TooltipBody Context="ctx">
+                                    <WeTable Items="GetPlayerInCategory(ctx.Categorie)">
+                                        <THead>
+                                            <WeTableHeadCell>Nom </WeTableHeadCell>
+                                            <WeTableHeadCell>Prenom</WeTableHeadCell>
+                                            <WeTableHeadCell>Points</WeTableHeadCell>
+                                            
+                                        </THead>
+                                        <TBody Context="cat">
+                                            <WeTableCell>@cat.Item.Nom</WeTableCell>
+                                            <WeTableCell>@cat.Item.Prenom</WeTableCell>
+                                            <WeTableCell>@cat.Item.PointsMensuels</WeTableCell>
+
+                                        </TBody>
                                     </WeTable>
-                                    </td>
-                                    </tr>
-                                    </tbody>
-                                </table>
-                            </WeCol>
+                                </TooltipBody>
+                            </GraphiqueClub>
+
                         }
+                        @*Graphique progression mensuelle*@
+                        else if ((AppState.Store.State.LicenciesParProgressionMensuelle?.Any() ?? false) && (_graphicType.Item3 == GraphicType.ProgressionMensuelle))
+                   {
+                    <GraphiqueClub ChartOptions="ChartOptions" Items="AppState.Store.State.LicenciesParProgressionMensuelle" Labels="AppState.Store.State.LicenciesParProgressionMensuelle.Select(x=>x.Categorie).ToList()" Values="AppState.Store.State.LicenciesParProgressionMensuelle.Select(x=>(double) x.Total).ToList()">
+                        <TTableHead>
+                            <WeTableCell>Categorie</WeTableCell>
+                            <WeTableCell>#</WeTableCell>
+                            <WeTableCell>%</WeTableCell>
+                        </TTableHead>
+                        <TTableBody Context="ctx">
+
+                            <WeTableCell>@ctx.Item.Categorie</WeTableCell>
+                            <WeTableCell>@ctx.Item.Total</WeTableCell>
+                            <WeTableCell>@ctx.Item.Pourcentage %</WeTableCell>
+                        </TTableBody>
+                    </GraphiqueClub>
+
+
+                }
+                    @*Graphique Licence progression saison*@
+                    else if ((AppState.Store.State.LicenciesParProgressionSaison?.Any() ?? false) && (_graphicType.Item3 == GraphicType.ProgressionSaison))
+                   {
+                    <GraphiqueClub ChartOptions="ChartOptions" Items="AppState.Store.State.LicenciesParProgressionSaison" Labels="AppState.Store.State.LicenciesParProgressionSaison.Select(x=>x.Categorie).ToList()" Values="AppState.Store.State.LicenciesParProgressionSaison.Select(x=>(double) x.Total).ToList()">
+                        <TTableHead>
+                            <WeTableCell>Categorie</WeTableCell>
+                            <WeTableCell>#</WeTableCell>
+                            <WeTableCell>%</WeTableCell>
+                        </TTableHead>
+                        <TTableBody Context="ctx">
+
+                            <WeTableCell>@ctx.Item.Categorie</WeTableCell>
+                            <WeTableCell>@ctx.Item.Total</WeTableCell>
+                            <WeTableCell>@ctx.Item.Pourcentage %</WeTableCell>
+                        </TTableBody>
+                    </GraphiqueClub>
+
+                }
+                else if ((AppState.Store.State.LicenciesParClassement?.Any() ?? false) && (_graphicType.Item3 == GraphicType.Classement))
+                       {
+                        <GraphiqueClub ChartOptions="ChartOptions" Items="AppState.Store.State.LicenciesParClassement" Labels="AppState.Store.State.LicenciesParClassement.Select(x=>x.Classement.ToString()).ToList()" Values="AppState.Store.State.LicenciesParClassement.Select(x=>(double) x.Total).ToList()">
+                            <TTableHead>
+                                <WeTableCell>Classement</WeTableCell>
+                                <WeTableCell>#</WeTableCell>
+                                <WeTableCell>%</WeTableCell>
+                            </TTableHead>
+                            <TTableBody Context="ctx">
+
+                                <WeTableCell>@ctx.Item.Classement</WeTableCell>
+                                <WeTableCell>@ctx.Item.Total</WeTableCell>
+                                <WeTableCell>@ctx.Item.Pourcentage %</WeTableCell>
+                            </TTableBody>
+                        </GraphiqueClub>
+
+                    }
+                    else if ((AppState.Store.State.LicenciesParPointsMensuels?.Any() ?? false) && (_graphicType.Item3 == GraphicType.PointMensuel))
+                   {
+                    <GraphiqueClub ChartOptions="ChartOptions" Items="AppState.Store.State.LicenciesParPointsMensuels" Labels="AppState.Store.State.LicenciesParPointsMensuels.Select(x=>x.Classement.ToString()).ToList()" Values="AppState.Store.State.LicenciesParPointsMensuels.Select(x=>(double) x.Total).ToList()">
+                        <TTableHead>
+                            <WeTableCell>Classement</WeTableCell>
+                            <WeTableCell>#</WeTableCell>
+                            <WeTableCell>%</WeTableCell>
+                        </TTableHead>
+                        <TTableBody Context="ctx">
+
+                            <WeTableCell>@ctx.Item.Classement</WeTableCell>
+                            <WeTableCell>@ctx.Item.Total</WeTableCell>
+                            <WeTableCell>@ctx.Item.Pourcentage %</WeTableCell>
+                        </TTableBody>
+                    </GraphiqueClub>
+                   
+                }
                     </WeRow>
                 </WeContainer>
             </Content>
@@ -157,7 +229,131 @@
     <EquipeTable Phase="2" />
     <EquipeTable Phase="1" />
 </WeRow>
+<WeRow>
+    <WeWidget Columns="new List<WeColumn>() { WeColumn.sm12, WeColumn.md6 }">
+        <WePanel>
+            <Title>
+                <WePanelTitle Title="@_playerType.Item1" IsCloseable="true" IsCollapseable="true">
+                    <ToolBox>
+                        @foreach (var g in PlayerTypes)
+                        {
+                            <WeNavItem>
+                                <WeButton id="@GenerateButtonId(g.Item3)" ButtonType="ButtonType.Link" Color="Color.None" OnClick="() => ShowPlayerType(g)">
+                                    <i class="@g.Item2"></i>
+                                </WeButton>
+                            </WeNavItem>
+                            <WeTooltip Target="@GenerateButtonId(g.Item3)" Placement="Placement.Bottom">@g.Item1 </WeTooltip>
+                        }
+                    </ToolBox>
+                </WePanelTitle>
+            </Title>
+            <Content>
+                <WePanelContent>
+                    @if (AppState.Store.State.LicencesForClubs.Items.Any() && _playerType.Item3 == PlayerType.OrdreAlphabetique)
+                    {
+                        <WeTable Items="AppState.Store.State.LicencesForClubs.Items.OrderBy(x=>x.Nom).ToList()">
+                            <THead>
+                                <WeTableHeadCell>@(" ")</WeTableHeadCell>
+                                <WeTableHeadCell>Categorie</WeTableHeadCell>
+                                <WeTableHeadCell>Nom</WeTableHeadCell>
+                                <WeTableHeadCell>Prénom</WeTableHeadCell>
+                                <WeTableHeadCell>Points</WeTableHeadCell>
+                            </THead>
+                            <TBody Context="ctx">
+                                <WeTableCell><span class="fa-2x fas @(ctx.Item.Sexe=="M"?"fa-male":"fa-female")"></span></WeTableCell>
+                                <WeTableCell>@ctx.Item.GetCategorie()</WeTableCell>
+                                <WeTableCell>@ctx.Item.Nom</WeTableCell>
+                                <WeTableCell>@ctx.Item.Prenom</WeTableCell>
+                                <WeTableCell>@ctx.Item.PointsMensuels</WeTableCell>
 
+                            </TBody>
+                        </WeTable>
+                    }
+                    else if (AppState.Store.State.LicencesForClubs.Items.Any() && _playerType.Item3 == PlayerType.ClassementOfficiel)
+                    {
+                        <WeTable Items="AppState.Store.State.LicencesForClubs.Items.OrderByDescending(x=>x.NPoint).ToList()">
+                            <THead>
+                                <WeTableHeadCell>@(" ")</WeTableHeadCell>
+                                <WeTableHeadCell>Categorie</WeTableHeadCell>
+                                <WeTableHeadCell>Nom</WeTableHeadCell>
+                                <WeTableHeadCell>Prénom</WeTableHeadCell>
+                                <WeTableHeadCell>Points</WeTableHeadCell>
+                            </THead>
+                            <TBody Context="ctx">
+                                <WeTableCell><span class="fa-2x fas @(ctx.Item.Sexe=="M"?"fa-male":"fa-female")"></span></WeTableCell>
+                                <WeTableCell>@ctx.Item.GetCategorie()</WeTableCell>
+                                <WeTableCell>@ctx.Item.Nom</WeTableCell>
+                                <WeTableCell>@ctx.Item.Prenom</WeTableCell>
+                                <WeTableCell>@ctx.Item.NPoint</WeTableCell>
+
+                            </TBody>
+                        </WeTable>
+                    }
+                    else if (AppState.Store.State.LicencesForClubs.Items.Any() && _playerType.Item3 == PlayerType.PointsMensuels)
+                    {
+                        <WeTable Items="AppState.Store.State.LicencesForClubs.Items.OrderByDescending(x=>x.NPointsMensuel).ToList()">
+                            <THead>
+                                <WeTableHeadCell>@(" ")</WeTableHeadCell>
+                                <WeTableHeadCell>Categorie</WeTableHeadCell>
+                                <WeTableHeadCell>Nom</WeTableHeadCell>
+                                <WeTableHeadCell>Prénom</WeTableHeadCell>
+                                <WeTableHeadCell>Points</WeTableHeadCell>
+                            </THead>
+                            <TBody Context="ctx">
+                                <WeTableCell><span class="fa-2x fas @(ctx.Item.Sexe=="M"?"fa-male":"fa-female")"></span></WeTableCell>
+                                <WeTableCell>@ctx.Item.GetCategorie()</WeTableCell>
+                                <WeTableCell>@ctx.Item.Nom</WeTableCell>
+                                <WeTableCell>@ctx.Item.Prenom</WeTableCell>
+                                <WeTableCell>@(Math.Floor (ctx.Item.NPointsMensuel))</WeTableCell>
+
+                            </TBody>
+                        </WeTable>
+                    }
+                    else if (AppState.Store.State.LicencesForClubs.Items.Any() && _playerType.Item3 == PlayerType.CategorieAge)
+                    {
+                        <WeTable Items="AppState.Store.State.LicencesForClubs.Items.OrderBy(x=>x.Categorie).ToList()">
+                            <THead>
+                                <WeTableHeadCell>@(" ")</WeTableHeadCell>
+                                <WeTableHeadCell>Categorie</WeTableHeadCell>
+                                <WeTableHeadCell>Nom</WeTableHeadCell>
+                                <WeTableHeadCell>Prénom</WeTableHeadCell>
+                                <WeTableHeadCell>Points</WeTableHeadCell>
+                            </THead>
+                            <TBody Context="ctx">
+                                <WeTableCell><span class="fa-2x fas @(ctx.Item.Sexe=="M"?"fa-male":"fa-female")"></span></WeTableCell>
+                                <WeTableCell>@ctx.Item.GetCategorie()</WeTableCell>
+                                <WeTableCell>@ctx.Item.Nom</WeTableCell>
+                                <WeTableCell>@ctx.Item.Prenom</WeTableCell>
+                                <WeTableCell>@(Math.Floor (ctx.Item.NPointsMensuel))</WeTableCell>
+
+                            </TBody>
+                        </WeTable>
+                    }
+                    else if (AppState.Store.State.LicencesForClubs.Items.Any() && _playerType.Item3 == PlayerType.ProgressionMensuelle)
+                    {
+                        <WeTable Items="AppState.Store.State.LicencesForClubs.Items.OrderByDescending(x=>x.ProgressionMensuelle).ToList()">
+                            <THead>
+                                <WeTableHeadCell>@(" ")</WeTableHeadCell>
+                                <WeTableHeadCell>Categorie</WeTableHeadCell>
+                                <WeTableHeadCell>Nom</WeTableHeadCell>
+                                <WeTableHeadCell>Prénom</WeTableHeadCell>
+                                <WeTableHeadCell>Points</WeTableHeadCell>
+                            </THead>
+                            <TBody Context="ctx">
+                                <WeTableCell><span class="fa-2x fas @(ctx.Item.Sexe=="M"?"fa-male":"fa-female")"></span></WeTableCell>
+                                <WeTableCell>@ctx.Item.GetCategorie()</WeTableCell>
+                                <WeTableCell>@ctx.Item.Nom</WeTableCell>
+                                <WeTableCell>@ctx.Item.Prenom</WeTableCell>
+                                <WeTableCell>@(ctx.Item.ProgressionMensuelle)</WeTableCell>
+
+                            </TBody>
+                        </WeTable>
+                    }
+                </WePanelContent>
+            </Content>
+        </WePanel>
+    </WeWidget>
+</WeRow>
 @code {
     [Parameter] public string Numero { get; set; }
     private WeSerie SerieCategorie { get; set; }
@@ -169,37 +365,24 @@
     public IPagedResultWithLinks<OrganismeDto> Organismes => AppState.Store.State.Organismes;
 
     private string GetSerieBackground(int index) =>
-        $"background-color:{SerieCategorie.Backgrounds[index].ToRGB()}";
+        $"background-color:{SerieCategorie?.Backgrounds[index].ToRGB()}";
 
 
     private OrganismeDto GetOrganisme(string id) =>
     Organismes.Items.Where(o => o.Id == id).FirstOrDefault();
 
     private IOptions ChartOptions =>
-        new Options() { Title = new OptionTitle() { Display = false }, Legend = new OptionLegend() { Display = false } ,Responsive=true};
+        new Options() { Title = new OptionTitle() { Display = false }, Legend = new OptionLegend() { Display = false }, Responsive = true };
+
 
     protected override void OnInitialized()
     {
         base.OnInitialized();
-
-
-
-        AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowseEquipeAction)).Subscribe(mutation =>
-        {
-            var eqs = mutation.State.Equipes.Items.ToObservable();
-            ActionService.AllowStateChanged = false;
-            eqs.SubscribeAsync(equipe => AppState.Store.DispatchAsync<BrowseResultatEquipeClassementAction>(a => a.Equipe = equipe),
-                ex => logger.LogError(ex.Message),
-                () => {
-                    logger.LogInformation("Equipes are loaded");
-                    ActionService.AllowStateChanged = false;
-                    ActionService.NotifyStateChanged<BrowseResultatEquipeClassementAction>();
-                })  ;
-        });
-
-
+        _graphicType = _graphicTypes.Where(x => x.Item3 == GraphicType.Classement).First();
+        _playerType = _playerTypes.Where(x => x.Item3 == PlayerType.OrdreAlphabetique).First();
     }
-    private int CalculatePct(int count, int total) =>(int)( (1.0 * count) / total * 100);
+
+    private int CalculatePct(int count, int total) => (int)((1.0 * count) / total * 100);
 
     private void ShowLocation(string lon, string lat)
     {
@@ -211,19 +394,103 @@
         await base.OnAfterRenderAsync(firstRender);
         if (firstRender)
         {
-            await AppState.Store.DispatchAsync<BrowseOrganismesAction>
-                (a => { });
-            await AppState.Store.DispatchAsync<GetClubAction>
-                (a => a.Numero = Numero);
-            await AppState.Store.DispatchAsync<BrowseClubDetailAction>
-                (a => a.Numero = Numero);
-            await AppState.Store.DispatchAsync<BrowseLicencesForClubAction>
-                (a => a.Numero = Numero);
-            await AppState.Store.DispatchAsync<BrowseEquipeAction>
-                (a => a.Numero = Numero);
+            AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowseEquipeAction)).Subscribe(mutation =>
+            {
+                var eqs = mutation.State.Equipes.Items.ToObservable();
+                ActionService.AllowStateChanged = false;
+                eqs.SubscribeAsync(equipe => AppState.Store.DispatchAsync<BrowseResultatEquipeClassementAction>(a => a.Equipe = equipe),
+                    ex => logger.LogError(ex.Message),
+                    () =>
+                    {
+                        logger.LogInformation("Equipes are loaded");
+                        ActionService.AllowStateChanged = true;
+                        ActionService.NotifyStateChanged<BrowseResultatEquipeClassementAction>();
+                    });
+            });
+
+            AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowsePartiesAction)).Subscribe(mutation => {
+                return;
+            });
+            await LoadDatas();
         }
     }
+    protected override async Task LoadDatas()
+    {
+        await AppState.Store.DispatchAsync<BrowseOrganismesAction>
+                   (a => { });
+        await AppState.Store.DispatchAsync<GetClubAction>
+            (a => a.Numero = Numero);
+        await AppState.Store.DispatchAsync<BrowseClubDetailAction>
+            (a => a.Numero = Numero);
+        await AppState.Store.DispatchAsync<BrowseLicencesForClubAction>
+            (a => a.Numero = Numero);
+        await AppState.Store.DispatchAsync<BrowseEquipeAction>
+            (a => a.Numero = Numero);
+    }
+    List<(string, string, GraphicType)> _graphicTypes = WeCommon.Extensions.GetIconAndDescription<GraphicType>();
+    private List<(string, string, GraphicType)> GraphicTypes => _graphicTypes;
+    private (string, string, GraphicType) _graphicType;
+    void ShowGraphicType((string, string, GraphicType) type)
+    {
+        _graphicType = type;
+    }
+    string GenerateButtonId(GraphicType type) => $"btn-{type.ToString()}";
 
+    List<(string, string, PlayerType)> _playerTypes = WeCommon.Extensions.GetIconAndDescription<PlayerType>();
+    private List<(string, string, PlayerType)> PlayerTypes => _playerTypes;
+    private (string, string, PlayerType) _playerType;
+    void ShowPlayerType((string, string, PlayerType) type)
+    {
+        _playerType = type;
+    }
+    string GenerateButtonId(PlayerType type) => $"btn-{type.ToString()}";
 
+    string ButtonClubId = Guid.NewGuid().ToString().Replace("-", "");
+    private List<LicenceDto> GetPlayerInCategory(string categorie)
+    {
+        return AppState.Store.State.LicencesForClubs.Items.Where(lic => lic.Categorie == categorie).ToList();
+    }
+    private enum GraphicType
+    {
+        [Description("Catgégorie d'age")]
+        [Icon("fas fa-chart-pie")]
+        CategorieAge,
+        [Description("Classement")]
+        [Icon("fas fa-chart-bar")]
+        Classement,
+        [Description("Points Mensuels")]
+        [Icon("fas fa-chart-line")]
+        PointMensuel,
+        [Description("Progressions Mensuelles")]
+        [Icon("fas fa-chart-line")]
+        ProgressionMensuelle,
+        [Description("Progressions Saison")]
+        [Icon("fas fa-chart-line")]
+        ProgressionSaison,
+    }
+    public enum PlayerType
+    {
+        [Description("Ordre Alphabétique")]
+        [Icon("fas fa-chart-pie")]
+        OrdreAlphabetique,
+        [Description("Classement officiel")]
+        [Icon("fas fa-chart-pie")]
+        ClassementOfficiel,
+        [Description("Points Mensuels")]
+        [Icon("fas fa-chart-pie")]
+        PointsMensuels,
+        [Description("Catgégorie d'age")]
+        [Icon("fas fa-chart-pie")]
+        CategorieAge,
+        [Description("Progression Mensuelle")]
+        [Icon("fas fa-chart-pie")]
+        ProgressionMensuelle,
+        [Description("Progression Saison")]
+        [Icon("fas fa-chart-pie")]
+        ProgressionSaison,
+        [Description("Genre")]
+        [Icon("fas fa-chart-pie")]
+        Genre
+    }
 
 }

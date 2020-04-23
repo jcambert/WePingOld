@@ -1,0 +1,83 @@
+﻿@typeparam TItem
+@using WeChart
+@using WeC
+<WeCol Columns="new List<WeColumn>() {WeColumn.md12 }">
+    <table style="width:100%;">
+        <tbody>
+            <tr>
+                <th style="width:37%">&nbsp;</th>
+                <th>&nbsp;</th>
+            </tr>
+            <tr>
+                <td>
+                    <Chart Options="ChartOptions" DefaultChartType="doughnut" Labels="Labels" EnableRendering="_shouldRender">
+                        <WeSerie @ref="SerieCategorie" Backgrounds="Backgrounds" Label="Classement" Values="Values"></WeSerie>
+                    </Chart>
+                </td>
+                <td>
+                    <WeTable Id="popovertbl" IsBordered="true" Items="Items" TItem=" TItem" IsHovarable="true" OnRowMouseOver="MouseOver" OnRowMouseOut="MouseOut">
+        <THead>
+            <WeTableCell>&nbsp;</WeTableCell>
+            @TTableHead
+        </THead>
+        <TBody Context="ctx">
+            <WeTableCell Class="px-2 py-2"><div style="@GetSerieBackground(ctx.Index)">@("_")</div></WeTableCell>
+            @TTableBody(ctx)
+
+        </TBody>
+        </WeTable>
+        </td>
+        </tr>
+        </tbody>
+    </table>
+    @if (TooltipHeader != null && TooltipBody != null)
+    {
+    <WePopover Target="popovertbl" @ref="pop1" >
+        <WePopoverHeader>@TooltipHeader(_current)</WePopoverHeader>
+        <WePopoverBody>@TooltipBody(_current)</WePopoverBody>
+    </WePopover>
+    }
+</WeCol>
+
+@code {
+    [Parameter] public List<TItem> Items { get; set; }
+    [Parameter] public List<string> Labels { get; set; }
+
+    List<double> _values;
+    [Parameter] public List<double> Values { get=>_values; set {
+            if (_values != value)
+            {
+                _values = value;
+                Backgrounds = WeC.WeColor.Random(_values.Count);
+            }
+        } }
+    [Parameter] public IOptions ChartOptions { get; set; }
+    [Parameter] public RenderFragment<ItemWithIndex<TItem>> TTableBody { get; set; }
+    [Parameter] public RenderFragment TTableHead { get; set; }
+    [Parameter] public RenderFragment<TItem> TooltipHeader { get; set; }
+    [Parameter] public RenderFragment<TItem> TooltipBody { get; set; }
+    [Parameter] public EventCallback<TItem> OnMouseOver { get; set; }
+    private WeSerie SerieCategorie { get; set; }
+    private List<WeColor> Backgrounds { get; set; }
+    private string GetSerieBackground(int index) =>
+        $"background-color:{Backgrounds[index].ToRGB()};text-indent: -10000em;";
+    WePopover pop1 { get; set; }
+    private bool _shouldRender=true;
+    private TItem _current;
+    private void MouseOver(TItem item)
+    {
+        _current = item;
+        _shouldRender = false;
+        pop1?.Show();
+    }
+    private void MouseOut(TItem item)
+    {
+        _shouldRender = false;
+        pop1?.Hide();
+    }
+    /* protected override bool ShouldRender() {
+         var res = _shouldRender;
+         _shouldRender = base.ShouldRender();
+         return res;
+     }*/
+}

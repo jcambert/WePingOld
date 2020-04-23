@@ -51,11 +51,16 @@ namespace WePing.domain.Licences.Dto
         public double NValeurIntitial => this.GetPoints(ValeurInitial);
 
         public int Classement => (int)(NPointsMensuel / 100);
+
+        public int ClassementOfficiel =>(int) ((System.DateTime.Now.Month>=9?PointsPhase1:PointsPhase2) /100);
+
         public int PointsMensuels => (int)(NValeurIntitial + NPointsMensuel - NValeurIntitial);
         public int PointsPhase1 => (int)(NValeurIntitial);
         public int PointsPhase2 => (int)(NPoint);
         public int ProgressionMensuelle => (int)(NPointsMensuel - NAncienPointsMensuel);
         public int ProgressionGenerale => (int)(NPointsMensuel - NValeurIntitial);
+        public int ProgressionMensuelleCategorie => ProgressionMensuelle > 0 ? 1 : ProgressionMensuelle < 0 ? -1 : 0;
+        public int ProgressionSaisonCategorie => ProgressionGenerale > 0 ? 1 : ProgressionGenerale < 0 ? -1 : 0;
         #endregion
 
 

@@ -1,16 +1,14 @@
 ﻿using MicroS_Common.Types;
-using OfficeOpenXml.FormulaParsing.ExpressionGraph;
 using System;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
-using System.Linq.Expressions;
 using System.Reflection;
 using System.Text.RegularExpressions;
 using WePing.Components;
 using WePing.domain.Equipes.Dto;
+using WePing.domain.JoueurDetails.Dto;
 using WePing.domain.Licences.Dto;
-
+using WePing.Services;
 namespace WePing
 {
     public class QueryAttribute : Attribute
@@ -92,9 +90,11 @@ namespace WePing
             {"V4","Vétéran 4" },
             {"V5","Vétéran 5" },
         };
-        internal static string GetCategorie(this WePing.Services.LicenceCategorie lic)
-        => categories[lic.Categorie];
-        internal static string GetCategorie(this WePing.domain.JoueurDetails.Dto.JoueurDetailDto lic)
+        internal static string GetCategorie(this LicenceCategorie lic)
+        => lic.Categorie==null ?"": categories[lic.Categorie];
+        internal static string GetCategorie(this JoueurDetailDto lic)
+       => categories[lic.Categorie];
+        internal static string GetCategorie(this LicenceDto lic)
        => categories[lic.Categorie];
 
 

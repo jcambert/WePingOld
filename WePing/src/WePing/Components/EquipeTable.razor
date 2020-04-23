@@ -1,5 +1,8 @@
 ﻿@using WePing.domain.Equipes.Dto
 @using WePing.domain.Organismes.Dto
+@using System.Reactive.Linq
+@if (Equipes.Any())
+{
 <WeWidget Columns="new List<WeColumn>() { WeColumn.sm12, WeColumn.md6 }">
     <WePanel>
         <Title>
@@ -15,7 +18,7 @@
                         <WeTableHeadCell>Classement</WeTableHeadCell>
                     </THead>
                     <TBody Context="ctx">
-                        <WeTableHeadCell>@(ctx.Index+1)</WeTableHeadCell>
+                        <WeTableHeadCell>@(ctx.Index + 1)</WeTableHeadCell>
                         <WeTableCell>@ctx.Item.Division</WeTableCell>
                         <WeTableCell>@(GetOrganisme(ctx.Item.GetCodeOrganisme())?.Libelle)</WeTableCell>
                         <WeTableCell><h4><span class="@GetClassForClassement(ctx.Item.Classement)"> @(ctx.Item.Classement.Item1) / @(ctx.Item.Classement.Item2)</span></h4></WeTableCell>
@@ -25,15 +28,14 @@
         </Content>
     </WePanel>
 </WeWidget>
-
+}
 @code {
     [CascadingParameter] public ReduxDevTools<WePingState, IAction> AppState { get; set; }
     [Parameter] public int Phase { get; set; }
     public List<EquipeDto> Equipes => Phase == 1 ? AppState.Store.State.EquipePhase1 : AppState.Store.State.EquipePhase2;
     public IPagedResultWithLinks<OrganismeDto> Organismes => AppState.Store.State.Organismes;
     private string Title => $"Equipes Phase {Phase}";
-    private OrganismeDto GetOrganisme(string id) =>
-    Organismes.Items.Where(o => o.Id == id).FirstOrDefault();
+    private OrganismeDto GetOrganisme(string id) =>    Organismes.Items.Where(o => o.Id == id).FirstOrDefault();
     private string GetClassForClassement((int, int) clt)
     => new WeCommon.WeStringBuilder()
             .Add("badge")
@@ -48,6 +50,15 @@
         base.OnInitialized();
 
         AppState.Store.OnChanged.Subscribe(state =>
+        {
+            InvokeAsync(() => StateHasChanged());
+        });
+    }
+
+    protected override void OnAfterRender(bool firstRender)
+    {
+        base.OnAfterRender(firstRender);
+        AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowseResultatEquipeClassementAction) ).Subscribe(mutation =>
         {
             InvokeAsync(() => StateHasChanged());
         });
