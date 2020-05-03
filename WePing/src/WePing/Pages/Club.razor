@@ -251,7 +251,7 @@
                 <WePanelContent>
                     @if (AppState.Store.State.LicencesForClubs.Items.Any() && _playerType.Item3 == PlayerType.OrdreAlphabetique)
                     {
-                        <WeTable Items="AppState.Store.State.LicencesForClubs.Items.OrderBy(x=>x.Nom).ToList()">
+                        <WeTable Items="AppState.Store.State.LicencesForClubs.Items.OrderBy(x=>x.Nom).ToList()"  IsHovarable="true" OnRowClick="@((LicenceDto item)=>ViewJoueur(item))">
                             <THead>
                                 <WeTableHeadCell>@(" ")</WeTableHeadCell>
                                 <WeTableHeadCell>Categorie</WeTableHeadCell>
@@ -271,7 +271,7 @@
                     }
                     else if (AppState.Store.State.LicencesForClubs.Items.Any() && _playerType.Item3 == PlayerType.ClassementOfficiel)
                     {
-                        <WeTable Items="AppState.Store.State.LicencesForClubs.Items.OrderByDescending(x=>x.NPoint).ToList()">
+                        <WeTable Items="AppState.Store.State.LicencesForClubs.Items.OrderByDescending(x=>x.NPoint).ToList()"  IsHovarable="true" OnRowClick="@((LicenceDto item)=>ViewJoueur(item))">
                             <THead>
                                 <WeTableHeadCell>@(" ")</WeTableHeadCell>
                                 <WeTableHeadCell>Categorie</WeTableHeadCell>
@@ -291,7 +291,7 @@
                     }
                     else if (AppState.Store.State.LicencesForClubs.Items.Any() && _playerType.Item3 == PlayerType.PointsMensuels)
                     {
-                        <WeTable Items="AppState.Store.State.LicencesForClubs.Items.OrderByDescending(x=>x.NPointsMensuel).ToList()">
+                        <WeTable Items="AppState.Store.State.LicencesForClubs.Items.OrderByDescending(x=>x.NPointsMensuel).ToList()"  IsHovarable="true" OnRowClick="@((LicenceDto item)=>ViewJoueur(item))">
                             <THead>
                                 <WeTableHeadCell>@(" ")</WeTableHeadCell>
                                 <WeTableHeadCell>Categorie</WeTableHeadCell>
@@ -311,7 +311,7 @@
                     }
                     else if (AppState.Store.State.LicencesForClubs.Items.Any() && _playerType.Item3 == PlayerType.CategorieAge)
                     {
-                        <WeTable Items="AppState.Store.State.LicencesForClubs.Items.OrderBy(x=>x.Categorie).ToList()">
+                        <WeTable Items="AppState.Store.State.LicencesForClubs.Items.OrderBy(x=>x.Categorie).ToList()"  IsHovarable="true" OnRowClick="@((LicenceDto item)=>ViewJoueur(item))">
                             <THead>
                                 <WeTableHeadCell>@(" ")</WeTableHeadCell>
                                 <WeTableHeadCell>Categorie</WeTableHeadCell>
@@ -331,7 +331,7 @@
                     }
                     else if (AppState.Store.State.LicencesForClubs.Items.Any() && _playerType.Item3 == PlayerType.ProgressionMensuelle)
                     {
-                        <WeTable Items="AppState.Store.State.LicencesForClubs.Items.OrderByDescending(x=>x.ProgressionMensuelle).ToList()">
+                        <WeTable Items="AppState.Store.State.LicencesForClubs.Items.OrderByDescending(x=>x.ProgressionMensuelle).ToList()"  IsHovarable="true" OnRowClick="@((LicenceDto item)=>ViewJoueur(item))">
                             <THead>
                                 <WeTableHeadCell>@(" ")</WeTableHeadCell>
                                 <WeTableHeadCell>Categorie</WeTableHeadCell>
@@ -364,23 +364,12 @@
     public List<EquipeDto> EquipePhase2 => AppState.Store.State.EquipePhase2;
     public IPagedResultWithLinks<OrganismeDto> Organismes => AppState.Store.State.Organismes;
 
-    private string GetSerieBackground(int index) =>
-        $"background-color:{SerieCategorie?.Backgrounds[index].ToRGB()}";
+    private string GetSerieBackground(int index) =>$"background-color:{SerieCategorie?.Backgrounds[index].ToRGB()}";
 
 
-    private OrganismeDto GetOrganisme(string id) =>
-    Organismes.Items.Where(o => o.Id == id).FirstOrDefault();
+    private OrganismeDto GetOrganisme(string id) =>Organismes.Items.Where(o => o.Id == id).FirstOrDefault();
 
-    private IOptions ChartOptions =>
-        new Options() { Title = new OptionTitle() { Display = false }, Legend = new OptionLegend() { Display = false }, Responsive = true };
-
-
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-        _graphicType = _graphicTypes.Where(x => x.Item3 == GraphicType.Classement).First();
-        _playerType = _playerTypes.Where(x => x.Item3 == PlayerType.OrdreAlphabetique).First();
-    }
+    private IOptions ChartOptions =>new Options() { Title = new OptionTitle() { Display = false }, Legend = new OptionLegend() { Display = false }, Responsive = true };
 
     private int CalculatePct(int count, int total) => (int)((1.0 * count) / total * 100);
 
@@ -389,30 +378,38 @@
         //var cats = from lic in Licencies.Items orderby lic.Categorie group lic by lic.Categorie;
     }
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    void ViewJoueur(LicenceDto joueur)
     {
-        await base.OnAfterRenderAsync(firstRender);
-        if (firstRender)
+        AppState.Store.Dispatch<NavigateToPlayer>(a =>
         {
-            AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowseEquipeAction)).Subscribe(mutation =>
-            {
-                var eqs = mutation.State.Equipes.Items.ToObservable();
-                ActionService.AllowStateChanged = false;
-                eqs.SubscribeAsync(equipe => AppState.Store.DispatchAsync<BrowseResultatEquipeClassementAction>(a => a.Equipe = equipe),
-                    ex => logger.LogError(ex.Message),
-                    () =>
-                    {
-                        logger.LogInformation("Equipes are loaded");
-                        ActionService.AllowStateChanged = true;
-                        ActionService.NotifyStateChanged<BrowseResultatEquipeClassementAction>();
-                    });
-            });
+            a.Licence = joueur.Numero;
 
-            AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowsePartiesAction)).Subscribe(mutation => {
-                return;
-            });
-            await LoadDatas();
-        }
+        });
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        _graphicType = _graphicTypes.Where(x => x.Item3 == GraphicType.Classement).First();
+        _playerType = _playerTypes.Where(x => x.Item3 == PlayerType.OrdreAlphabetique).First();
+        AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowseEquipeAction)).Subscribe(mutation =>
+        {
+            var eqs = mutation.State.Equipes.Items.ToObservable();
+            ActionService.AllowStateChanged = false;
+            eqs.SubscribeAsync(equipe => AppState.Store.DispatchAsync<BrowseResultatEquipeClassementAction>(a => { a.Division = equipe.GetDivision();a.Poule = equipe.GetPouleId(); }),
+                ex => logger.LogError(ex.Message),
+                () =>
+                {
+                    logger.LogInformation("Equipes are loaded");
+                    ActionService.AllowStateChanged = true;
+                    ActionService.NotifyStateChanged();
+                });
+        }).AddDisposable(disposables);
+
+        AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowsePartiesAction)).Subscribe(mutation =>
+        {
+            return;
+        }).AddDisposable(disposables);
+        //await LoadDatas();
     }
     protected override async Task LoadDatas()
     {

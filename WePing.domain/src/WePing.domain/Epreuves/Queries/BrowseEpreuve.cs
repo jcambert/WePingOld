@@ -14,7 +14,7 @@ namespace WePing.domain.Epreuves.Queries
             get { return _type; }
             set
             {
-                _type = Array.IndexOf(availableTypes, value.Trim().ToUpper()) >= 0 ? value.Trim().ToUpper() : "E";
+                _type = Array.IndexOf(availableTypes, value?.Trim()?.ToUpper()) >= 0 ? value.Trim().ToUpper() : "E";
 
             }
         }

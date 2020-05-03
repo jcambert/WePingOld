@@ -1,0 +1,22 @@
+﻿@using WeCommon
+@using WePing.domain
+<WeCol Class="@Class" Columns="new List<WeColumn>() { WeColumn.lg4 }"><h5>@Equipe</h5></WeCol>
+
+@code {
+    [Parameter] public string Equipe { get; set; }
+    [Parameter] public StatutRencontre Statut { get; set; }
+    string Class
+    {
+        get
+        {
+            WeStringBuilder sb = new WeStringBuilder();
+            sb
+                .Add("text-center")
+                .Add("color-red", Statut == StatutRencontre.Perdu)
+                .Add("color-green", Statut == StatutRencontre.Gagne)
+                .Add("color-blue", Statut == StatutRencontre.Nul)
+                .Add("w900");
+            return sb;
+        }
+    }
+}

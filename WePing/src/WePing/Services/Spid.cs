@@ -13,6 +13,10 @@ using WePing.domain.ClubDetails.Dto;
 using WePing.domain.ClubDetails.Queries;
 using WePing.domain.Clubs.Dto;
 using WePing.domain.Clubs.Queries;
+using WePing.domain.Divisions.Dto;
+using WePing.domain.Divisions.Queries;
+using WePing.domain.Epreuves.Dto;
+using WePing.domain.Epreuves.Queries;
 using WePing.domain.Equipes.Dto;
 using WePing.domain.Equipes.Queries;
 using WePing.domain.HistoriqueClassements.Dto;
@@ -27,6 +31,8 @@ using WePing.domain.Organismes.Dto;
 using WePing.domain.Organismes.Queries;
 using WePing.domain.Parties.Dto;
 using WePing.domain.Parties.Queries;
+using WePing.domain.Rencontres.Dto;
+using WePing.domain.Rencontres.Queries;
 using WePing.domain.ResultatEquipeRencontres.Dto;
 using WePing.domain.ResultatEquipeRencontres.Queries;
 
@@ -121,6 +127,9 @@ namespace WePing.Services
         Task<IPagedResultWithLinks<JoueurDto>> GetJoueurs(BrowseJoueur query);
         Task<IPagedResultWithLinks<HistoriqueClassementDto>> GetHistoriqueClassement(BrowseHistoriqueClassements query);
         Task<IPagedResultWithLinks<ClubDto>> GetClubs(BrowseClubs query);
+        Task<IPagedResultWithLinks<DivisionDto>> GetDivisions(BrowseDivisions query);
+        Task<IPagedResultWithLinks<EpreuveDto>> GetEpreuves(BrowseEpreuves query);
+        Task<RencontreDto> GetRencontre(GetRencontreLien query);
         Task<JoueurDetailDto> GetJoueurDetail(GetJoueurDetail query);
         Task<ClubDetailDto> GetClubDetail(GetClubDetail query);
         Task<ClubDto> GetClub(GetClub query);
@@ -129,6 +138,7 @@ namespace WePing.Services
         Task<IPagedResultWithLinks<EquipeDto> >GetEquipes(BrowseEquipes query);
         Task<IPagedResultWithLinks<OrganismeDto>> GetOrganismes(BrowseOrganismes query);
         Task<IPagedResultWithLinks<ResultatEquipeClassementDto>> GetResultatEquipeClassements(BrowseResultatEquipeClassements query);
+        Task<IPagedResultWithLinks<ResultatEquipeRencontreDto>> GetResultatEquipeRencontres(BrowseResultatEquipeRencontres query);
         Task<IPagedResultWithLinks<PartieDto>> GetParties(BrowseParties query); 
         
 
@@ -146,7 +156,11 @@ namespace WePing.Services
             _serviceProvider = serviceProfider;
 
         }
-
+        
+        public async Task<IPagedResultWithLinks<EpreuveDto>> GetEpreuves(BrowseEpreuves query)
+        {
+            return await GetRequest<EpreuveDto, BrowseEpreuves>($"{_api_endpoint}/epreuves", query);
+        }
         public async Task<IPagedResultWithLinks<LicenceDto>> Licences(BrowseLicences query)
         {
             // new PagedResultWithLinks<LicenceDto, BrowseLicences>(_http, query, _api_endpoint,"licences",refresh);
@@ -157,7 +171,10 @@ namespace WePing.Services
             var res = await GetRequest<LicenceDto>($"{_api_endpoint}/licence/{query.Licence}");
             return PagedResultWithLinks<LicenceDto>.Create(res);
         }
-
+        public async Task<IPagedResultWithLinks<DivisionDto>> GetDivisions(BrowseDivisions query)
+        {
+            return await GetRequest<DivisionDto, BrowseDivisions>($"{_api_endpoint}/divisions",query);
+        }
         public async Task<IPagedResultWithLinks<JoueurDto>> GetJoueurs(BrowseJoueur query)
         {
             return await GetRequest<JoueurDto, BrowseJoueur>($"{_api_endpoint}/joueurs", query);
@@ -181,6 +198,10 @@ namespace WePing.Services
             BrowseClubs _query = new BrowseClubs() { Numero = query.Numero };
             var res = await GetRequest<ClubDto, BrowseClubs>($"{_api_endpoint}/clubs",_query);
             return res.Items.FirstOrDefault();
+        }
+        public async Task<RencontreDto> GetRencontre(GetRencontreLien query)
+        {
+            return await GetRequest<RencontreDto>($"{_api_endpoint}/rencontre?{query.Lien}");
         }
         public async Task<LicenceDto> GetLicence(GetLicence query)
         {
@@ -215,7 +236,11 @@ namespace WePing.Services
             var res = await GetRequest<ResultatEquipeClassementDto, BrowseResultatEquipeClassements>($"{_api_endpoint}/resultat_equipe_classement", query);
             return res;
         }
-
+        public async Task<IPagedResultWithLinks<ResultatEquipeRencontreDto>> GetResultatEquipeRencontres(BrowseResultatEquipeRencontres query)
+        {
+            var res = await GetRequest<ResultatEquipeRencontreDto, BrowseResultatEquipeRencontres>($"{_api_endpoint}/resultat_equipe_rencontre", query);
+            return res;
+        }
         public async Task<IPagedResultWithLinks<PartieDto>> GetParties(BrowseParties query)
         {
             var res = await GetRequest<PartieDto, BrowseParties>($"{_api_endpoint}/parties", query);

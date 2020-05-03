@@ -45,12 +45,32 @@
                     <WeTableHeadCell>Prenom</WeTableHeadCell>
                     <WeTableHeadCell>Club</WeTableHeadCell>
                     <WeTableHeadCell>Classement</WeTableHeadCell>
+                    @if (!AppState.Store.State.HasProfile)
+                    {
+                        <WeTableHeadCell>Profile</WeTableHeadCell>
+                    }
+                    else
+                    {
+                        <WeTableHeadCell>Favoris</WeTableHeadCell>
+                    }
+
                 </THead>
                 <TBody Context="ctx">
                     <WeTableCell>@ctx.Item.Nom</WeTableCell>
                     <WeTableCell>@ctx.Item.Prenom</WeTableCell>
                     <WeTableCell>@ctx.Item.NomClub</WeTableCell>
                     <WeTableCell>@ctx.Item.Classement</WeTableCell>
+                    <WeTableCell>
+                        @if (!AppState.Store.State.HasProfile)
+                        {
+                            <WeButton Color="Color.Primary" OnClick="@(()=>ItsMe(ctx.Item))">C'est moi !</WeButton>
+                        }
+                        else
+                        {
+                            <WeButton OnClick="@(()=>AddToFavourite(ctx.Item))"><i class="fas fa-star "></i></WeButton>
+                        }
+
+                    </WeTableCell>
                 </TBody>
             </WeTable>
         }
@@ -61,7 +81,7 @@
 
 
     public SearchForm _SearchForm { get; set; }
-   // [CascadingParameter] public ReduxDevTools<WePingState, IAction> AppState { get; set; }
+    // [CascadingParameter] public ReduxDevTools<WePingState, IAction> AppState { get; set; }
     SearchPlayerModel _SearchModel { get; set; } = new SearchPlayerModel();
 
     void TrySearching(WeEditContext<SearchPlayerModel> ctx)
@@ -83,14 +103,14 @@
         });
     }
 
-  /*  protected override void OnInitialized()
+    void AddToFavourite(JoueurDto joueur)
     {
-        base.OnInitialized();
-
-        AppState.Store.OnChanged.Subscribe(state =>
-        {
-            InvokeAsync(() => StateHasChanged());
-        });
-    }*/
+        Console.WriteLine($"Add To Favourite {joueur.Nom}");
+    }
+    void ItsMe(JoueurDto joueur)
+    {
+        Console.WriteLine($"Add My Profile {joueur.Nom}");
+        AppState.Store.Dispatch<SetMyProfileAction>(a => a.Licence = joueur.Licence );
+    }
 
 }

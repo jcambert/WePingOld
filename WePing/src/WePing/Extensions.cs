@@ -1,5 +1,7 @@
 ﻿using MicroS_Common.Types;
 using System;
+using System.Collections.Generic;
+using System.Data;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -8,6 +10,7 @@ using WePing.Components;
 using WePing.domain.Equipes.Dto;
 using WePing.domain.JoueurDetails.Dto;
 using WePing.domain.Licences.Dto;
+using WePing.domain.ResultatEquipeRencontres.Dto;
 using WePing.Services;
 namespace WePing
 {
@@ -33,6 +36,11 @@ namespace WePing
     }
     public static class Extensions
     {
+
+        internal static void AddDisposable(this IDisposable disposable, List<IDisposable> registry)
+        {
+            registry?.Add(disposable);
+        }
         public static Type GetQueryType(this SearchType type)
         {
             return type.GetType().GetMember(type.ToString())
@@ -45,17 +53,35 @@ namespace WePing
             type.GetType().GetMember(type.ToString())
                    .First().GetCustomAttribute<QueryAttribute>()?.Create;
 
-        private static string GetPatternedValue(this EquipeDto equipe, string pattern)
+        private static string GetIdValue(this string value, string pattern)
         {
             var regex = new Regex(pattern);
-            var match = regex.Match(equipe.Lien);
+            var match = regex.Match(value);
             return match.Success && match.Groups["id"].Success ? match.Groups["id"].Value : string.Empty;
         }
-        public static string GetCodeOrganisme(this EquipeDto equipe) => equipe.GetPatternedValue(@"organisme_pere=(?<id>\d+)");
 
-        public static string GetCxPoule(this EquipeDto equipe) => equipe.GetPatternedValue(@"cx_poule=(?<id>\d+)");
+        private static string GetLienValue(this EquipeDto equipe, string pattern) => equipe?.Lien.GetIdValue(pattern) ?? string.Empty;
+        public static string GetCodeOrganisme(this EquipeDto equipe) => equipe?.GetLienValue(@"organisme_pere=(?<id>\d+)") ?? string.Empty;
 
-        public static string GetD1(this EquipeDto equipe) => equipe.GetPatternedValue(@"D1=(?<id>\d+)");
+        public static string GetPouleId(this EquipeDto equipe) => equipe?.GetLienValue(@"cx_poule=(?<id>\d+)") ?? string.Empty;
+
+        public static string GetDivision(this EquipeDto equipe) => equipe?.GetLienValue(@"D1=(?<id>\d+)") ?? string.Empty;
+
+        public static (string, string, DateTime) GetPouleInformations(this ResultatEquipeRencontreDto resultat)
+        {
+
+            var libelle = resultat?.Libelle.ToLower().Replace(" ", "") ?? string.Empty;
+            if (string.IsNullOrEmpty(libelle)) return ("", "", DateTime.Now);
+            var poule_pattern = @"poule(?<id>\w+)";
+            var journee_pattern = @"tourn°(?<id>\d+)";
+            var date_pattern = @"(?<id>((((0[1-9])|([1-2][0-9])|(3[0-1]))|([1-9]))\x2F(((0[1-9])|(1[0-2]))|([1-9]))\x2F(([0-9]{2})|(((19)|([2]([0]{1})))([0-9]{2})))))";
+            DateTime dt;
+            if (!DateTime.TryParse(libelle.GetIdValue(date_pattern), out dt))
+                dt = DateTime.Now;
+            return (libelle.GetIdValue(poule_pattern), libelle.GetIdValue(journee_pattern), dt);
+
+
+        }
 
         public static (int, int) GetClassement(this EquipeDto equipe, string numeroClub)
         {
@@ -91,11 +117,11 @@ namespace WePing
             {"V5","Vétéran 5" },
         };
         internal static string GetCategorie(this LicenceCategorie lic)
-        => lic.Categorie==null ?"": categories[lic.Categorie];
+        => lic.Categorie == null ? "" : categories[lic.Categorie];
         internal static string GetCategorie(this JoueurDetailDto lic)
-       => categories[lic.Categorie];
+       => lic.Categorie == null ? "" : categories[lic.Categorie];
         internal static string GetCategorie(this LicenceDto lic)
-       => categories[lic.Categorie];
+       => lic.Categorie == null ? "" : categories[lic.Categorie];
 
 
     }

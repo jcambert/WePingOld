@@ -36,6 +36,7 @@ using WePing.domain.ResultatEquipeRencontres.Dto;
 using WePing.domain.ResultatEquipeRencontres.Queries;
 using WePing.domain.ResultatIndividuels.Dto;
 using WePing.domain.ResultatIndividuels.Queries;
+using WePing.domain.Services;
 
 namespace WePing.Service.Spid.Controller
 {
@@ -46,10 +47,9 @@ namespace WePing.Service.Spid.Controller
     [Route("")]
     public class HomeController : BaseController
     {
-
         public HomeController(IDispatcher dispatcher) : base(dispatcher)
         {
-
+            
         }
         /// <summary>
         /// Get The  name of this service
@@ -122,11 +122,7 @@ namespace WePing.Service.Spid.Controller
             return Collection(await QueryAsync(query));
         }
 
-        [HttpGet("rencontre")]
-        public async Task<ActionResult<PagedResult<RencontreDto>>> GetRencontres([FromQuery] BrowseRencontres query)
-        {
-            return Collection(await QueryAsync(query));
-        }
+       
 
         [HttpGet("equipes")]
         public async Task<ActionResult<PagedResult<EquipeDto>>> GetEquipes([FromQuery] BrowseEquipes query)
@@ -164,6 +160,12 @@ namespace WePing.Service.Spid.Controller
             return Collection(await QueryAsync(query));
         }
 
+        [HttpGet("rencontre")]
+        public async Task<ActionResult<RencontreDto>> GetRencontre([FromQuery] GetRencontre query)
+        {
+            //return Ok();
+            return Single(await QueryAsync(query));
+        }
         [HttpGet("joueur/{licence}")]
         public async Task<ActionResult<JoueurDetailDto>> GetJoueurDetail([FromRoute] GetJoueurDetail query)
         {

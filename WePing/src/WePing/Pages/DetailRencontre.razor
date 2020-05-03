@@ -1,0 +1,104 @@
+﻿@page "/detailrencontre"
+@inherits PingBasePage
+@inject WePing.domain.Services.ICalculateurPoints calculateur
+@using System.Text.RegularExpressions
+@using WePing.domain.Services
+@using WePing.domain.Rencontres.Dto
+@using System.Reactive.Linq
+@if (Rencontre != null)
+{
+    <WeRow RowColumnCount="WeRowCount.Row1" HorizontalAlignment="Alignment.Center">
+        <RencontreResultat  Equipe="@Rencontre.Resultat.EquipeA" Statut="@Rencontre.Resultat.StatutEquipeA"></RencontreResultat>
+
+        <WeCol Class="col-md-auto">
+            <div class="bg-transparent clearfix text-center">
+                <ScoreBadge Statut="@Rencontre.Resultat.StatutEquipeA" Score="@Rencontre.Resultat.NResultatA" AsValue="false"></ScoreBadge>
+                -
+                <ScoreBadge Statut="@Rencontre.Resultat.StatutEquipeB" Score="@Rencontre.Resultat.NResultatB" AsValue="false"></ScoreBadge>
+            </div>
+        </WeCol>
+        <RencontreResultat  Equipe="@Rencontre.Resultat.EquipeB" Statut="@Rencontre.Resultat.StatutEquipeB"></RencontreResultat>
+
+    </WeRow>
+    <WeRow RowColumnCount="WeRowCount.Row1">
+        <WeCol Columns="new List<WeColumn>() {WeColumn.lg6 }">
+            <RencontreEquipe Equipe="@Rencontre.Resultat.EquipeA" Joueurs="@Rencontre.Joueurs" AB="A" NbreOfSets="Rencontre.NumberOfSetsA" Statut="Rencontre.StatutA"></RencontreEquipe>
+        </WeCol>
+        <WeCol Columns="new List<WeColumn>() {WeColumn.lg6 }">
+            <RencontreEquipe Equipe="@Rencontre.Resultat.EquipeB" Joueurs="@Rencontre.Joueurs" AB="B" NbreOfSets="Rencontre.NumberOfSetsB" Statut="Rencontre.StatutB"></RencontreEquipe>
+        </WeCol>
+    </WeRow>
+    <WeRow  HorizontalAlignment="Alignment.Center">
+        <RencontrePartie Parties="@Rencontre.Parties"></RencontrePartie>
+    </WeRow>
+}
+@code {
+
+    public RencontreDto Rencontre => AppState.Store.State.Rencontre;
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        AppState.Store.OnChanged.Where(mutation => mutation.Action == typeof(GetRencontreAction)).Subscribe(mutation =>
+        {
+            if (mutation.State.Rencontre.Parties.Any() && mutation.State.Rencontre.Joueurs.Any())
+            {
+                mutation.State.Rencontre.Joueurs.ForEach(joueur =>
+                {
+                    var clta = GetClassement(joueur.ClassementA);
+                    var cltb = GetClassement(joueur.ClassementB);
+                    joueur.SexeA = clta.Item1;
+                    joueur.PointsA = clta.Item2;
+                    joueur.SexeB = cltb.Item1;
+                    joueur.PointsB = cltb.Item2;
+                });
+                mutation.State.Rencontre.Parties.ForEach(partie =>
+                {
+                    if (partie.JoueurA.ToLowerInvariant() != "double" && partie.JoueurB.ToLowerInvariant() != "double")
+                    {
+                        partie.PointsA = Rencontre.Joueurs.Where(j => j.JoueurA == partie.JoueurA).First().PointsA;
+                        partie.PointsB = Rencontre.Joueurs.Where(j => j.JoueurA == partie.JoueurA).First().PointsB;
+                        Calculate(partie, "A");
+                        Calculate(partie, "B");
+                        Rencontre.Joueurs.Where(j => j.JoueurA == partie.JoueurA).First().PointsGagnesPerdusA += partie.PointsGagnesPerdusA;
+                        Rencontre.Joueurs.Where(j => j.JoueurB == partie.JoueurB).First().PointsGagnesPerdusB += partie.PointsGagnesPerdusB;
+                    }
+                    partie.GetDetail();
+                    mutation.State.Rencontre.NumberOfSetsA += partie.NumberOfSetsA;
+                    mutation.State.Rencontre.NumberOfSetsB += partie.NumberOfSetsB;
+                });
+                InvokeAsync(() => StateHasChanged());
+            }
+        }).AddDisposable(disposables);
+    }
+    protected override async Task LoadDatas()
+    {
+        await base.LoadDatas();
+        await AppState.Store.DispatchAsync<GetRencontreAction>(action =>
+        {
+            action.Lien = QueryString;
+        });
+    }
+
+    void Calculate(PartieRencontreDto partie, string joueur)
+    {
+
+        if (joueur == "A")
+        {
+            partie.PointsGagnesPerdusA = calculateur.Calculate(partie.PointsA, partie.PointsB, partie.StatutJoueurA == domain.StatutRencontre.Gagne ? VictoireDefaite.V : VictoireDefaite.D);
+        }
+        else
+        {
+            partie.PointsGagnesPerdusB = calculateur.Calculate(partie.PointsB, partie.PointsA, partie.StatutJoueurB == domain.StatutRencontre.Gagne ? VictoireDefaite.V : VictoireDefaite.D);
+        }
+    }
+    private (string, int) GetClassement(string value)
+    {
+        int result = 0;
+        string pattern = @"^(?<sexe>[f]|[m]|[F]|[M]) (?<points>\d+)pts";
+        var regex = new Regex(pattern);
+        var match = regex.Match(value);
+        Int32.TryParse(match.Success && match.Groups["points"].Success ? match.Groups["points"].Value : string.Empty, out result);
+        var sexe = match.Success && match.Groups["sexe"].Success ? match.Groups["sexe"].Value : "M";
+        return (sexe, result);
+    }
+}

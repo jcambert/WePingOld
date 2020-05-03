@@ -1,4 +1,5 @@
 using MicroS_Common;
+using MicroS_Common.Actions;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -8,11 +9,10 @@ using System;
 using WeChart;
 using WeCommon;
 using WePing.Components;
+using WePing.domain.Services;
 using WePing.Services;
-using WeRedux;
 using WeReduxBlazor;
 using WeStrap;
-
 namespace WePing
 {
     public class Startup
@@ -38,8 +38,10 @@ namespace WePing
                 opt.JsonSerializerOptions.IgnoreNullValues = true
                 );
             services.AddServerSideBlazor();
+            services.AddDataProtection();
             services.AddSingleton(Configuration.GetOptions<TilesOptions>(TilesOptions.TILES_OPTIONS));
             services.AddSingleton<Helper>();
+            services.AddTransient<ICalculateurPoints, CalculateurPoints>();
             services.AddScoped(typeof(IPagedResultWithLinks<>), typeof(PagedResultWithLinks<>));
 
             services.AddHttpClient<ISpidService, SpidService>(SpidService.SPID, c =>

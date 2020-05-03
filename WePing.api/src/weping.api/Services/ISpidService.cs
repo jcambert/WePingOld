@@ -66,9 +66,7 @@ namespace weping.api.Services
         [Get("resultat_equipe_classement")]
         public Task<PagedResult<ResultatEquipeClassementDto>> GetResultatEquipeClassement([FromQuery] BrowseResultatEquipeClassements query);
 
-        [AllowAnyStatusCode]
-        [Get("rencontre")]
-        public Task<PagedResult<RencontreDto>> GetRencontres([FromQuery] BrowseRencontres query);
+        
         [AllowAnyStatusCode]
         [Get("equipes")]
         public Task<PagedResult<EquipeDto>> GetEquipes([FromQuery] BrowseEquipes query);
@@ -89,6 +87,11 @@ namespace weping.api.Services
         [AllowAnyStatusCode]
         [Get("joueurs")]
         public Task<PagedResult<JoueurDto>> GetJoueurs([FromQuery] BrowseJoueur query);
+
+        [AllowAnyStatusCode]
+        [Get("rencontre")]
+        public Task<RencontreDto> GetRencontre([FromQuery] GetRencontre query);
+
         [AllowAnyStatusCode]
         [Get("joueur/{licence}")]
         public Task<JoueurDetailDto> GetJoueurDetail([Path] string licence);

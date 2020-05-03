@@ -1,6 +1,5 @@
-﻿using WePing.Models;
-using WeRedux;
-
+﻿using MicroS_Common.Actions;
+using WePing.Models;
 namespace WePing.Actions
 {
     public class BrowseJoueursAction:IAction

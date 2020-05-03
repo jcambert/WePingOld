@@ -1,20 +1,27 @@
 ﻿
 
 @code {
-    [CascadingParameter] public ReduxDevTools<WePingState, IAction> AppState { get; set; }
-    [Inject] protected IActionService ActionService { get; set; }
-    protected override void OnInitialized()
+   // [CascadingParameter] public ReduxDevTools<WePingState, IAction> AppState { get; set; }
+  //  [Inject] protected IActionService ActionService { get; set; }
+   /* protected override void OnInitialized()
     {
         base.OnInitialized();
 
-        AppState.Store.OnChanged.Subscribe(state =>
-        {
-            InvokeAsync(() => StateHasChanged());
-        });
         ActionService.OnLocationChanged.Subscribe(args => {
             InvokeAsync(()=>LoadDatas());
 
         });
+
+    }*/
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            logger.LogInformation("first Render");
+            await LoadDatas();
+        }
     }
 
 }

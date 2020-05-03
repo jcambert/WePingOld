@@ -1,0 +1,58 @@
+﻿@using WePing.domain.Rencontres.Dto
+@using WeCommon
+@if (Joueurs.Any())
+{
+    <WeListGroup>
+        <WeListGroupItem Color="Color.Dark" Class="w900 text-decoration-none text-reset">
+            <WeContainer IsFluid="true">
+                <WeRow RowColumnCount="WeRowCount.Row1">
+                    <WeCol Columns="new List<WeColumn>() { WeColumn.lg8,WeColumn.sm8 }" Class="text-left">@Equipe</WeCol>
+                    <WeCol Columns="new List<WeColumn>() { WeColumn.lg2,WeColumn.sm2 }" Class="text-left">
+                        <ScoreBadge Score="@SumOfPoint" AsValue="false" ></ScoreBadge>
+                    </WeCol>
+                    <WeCol Columns="new List<WeColumn>() { WeColumn.lg2,WeColumn.sm2 }" Class="text-left">
+                        <ScoreBadge Score="@NbreOfSets" AsValue="false" Statut="Statut"></ScoreBadge>
+                    </WeCol>
+                </WeRow>
+            </WeContainer>
+        </WeListGroupItem>
+        @foreach (var (joueur,index) in Joueurs.WithIndex())
+        {
+            <WeListGroupItem  Color="@((index%2)!=0?Color.Dark:Color.Light)" ListGroupType="ListGroupType.Link" Class="w900 text-decoration-none text-reset">
+                <WeContainer IsFluid="true">
+                    <WeRow RowColumnCount="WeRowCount.Row1">
+                        <WeCol Columns="@SexeColumn" Class="text-left">
+                            <h5><i class="@SexeClass(Sexe(joueur))"></i></h5>
+                        </WeCol>
+                        <WeCol Columns="@LeftColumn" Class="text-left">@Nom(joueur)</WeCol>
+                        <WeCol Columns="@RightColumn" Class="text-left">
+                            <ScoreBadge Score="@Points( joueur)" AsValue="false"></ScoreBadge>
+                        </WeCol>
+                        <WeCol Columns="@RightColumn" Class="text-left">
+                            <ScoreBadge Score="@PointsGagnesPerdus(joueur)" AsValue="true"></ScoreBadge>
+                        </WeCol>
+                    </WeRow>
+                </WeContainer>
+            </WeListGroupItem>
+        }
+    </WeListGroup>
+}
+@code {
+    [Parameter] public string Equipe { get; set; }
+    [Parameter] public List<JoueurRencontreDto> Joueurs { get; set; }
+    [Parameter] public string AB { get; set; }
+    [Parameter] public int NbreOfSets { get; set; }
+    [Parameter] public WePing.domain.StatutRencontre Statut { get; set; }
+    List<WeColumn> SexeColumn { get; } = new List<WeColumn>() { WeColumn.lg1,WeColumn.sm1 };
+    List<WeColumn> LeftColumn { get; } = new List<WeColumn>() { WeColumn.lg7,WeColumn.sm7 };
+    List<WeColumn> RightColumn { get; } = new List<WeColumn>() { WeColumn.lg2,WeColumn.sm2 };
+    int SumOfPoint => AB == "A" ? (from j in Joueurs select j.PointsA).Sum() : (from j in Joueurs select j.PointsB).Sum();
+    string Nom(JoueurRencontreDto joueur) => AB == "A" ? joueur.JoueurA : joueur.JoueurB;
+    int Points(JoueurRencontreDto joueur) => AB == "A" ? joueur.PointsA : joueur.PointsB;
+    double PointsGagnesPerdus(JoueurRencontreDto joueur) => AB == "A" ? joueur.PointsGagnesPerdusA : joueur.PointsGagnesPerdusB;
+    string Sexe(JoueurRencontreDto joueur) => AB == "A" ? joueur.SexeA : joueur.SexeB;
+    //  string NumberOfSets(JoueurRencontreDto joueur) => AB == "A" ? joueur. : joueur.SexeB;
+    string SexeClass(string value) => value == "M" ? "fas fa-male" : "fas fa-female";
+
+
+}

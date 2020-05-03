@@ -36,8 +36,7 @@ namespace WePing.Service.Spid
             services.AddJaeger();
             //services.AddOpenTracing();
             services.AddRedis();
-            //services.AddInitializers(typeof(IMongoDbInitializer));
-            services.AddHttpClient<ISpidRequest, SpidRequest>();//.AddPolicyHandler(GetRetryPolicy());
+            services.AddHttpClient<ISpidRequest, SpidRequest>();
             services.AddAutoMapper(Assembly.GetEntryAssembly(), typeof(DomainProfile).Assembly);
             services.AddSingleton<SpidOptions>();
             services.AddSingleton<SpidRequester>();
@@ -51,8 +50,6 @@ namespace WePing.Service.Spid
             builder.RegisterAssemblyTypes(Assembly.GetEntryAssembly()).AsImplementedInterfaces();
             builder.RegisterAssemblyTypes(typeof(DomainProfile).Assembly).AsImplementedInterfaces();
             builder.AddRabbitMq();
-            // builder.AddMongo();
-            // builder.AddMongoRepository<Product>("Products");
             builder.AddDispatchers();
         }
 
@@ -74,17 +71,10 @@ namespace WePing.Service.Spid
             app.UseSwaggerDocs();
             app.UseErrorHandler();
             app.UseServiceId();
-            //app.UseExcelResponseMiddleware();
 #pragma warning disable MVC1005
             app.UseMvc();
 #pragma warning restore MVC1005
-            app.UseRabbitMq()
-                //.SubscribeCommand<CreateProduct>(onError: (c, e) => new CreateProductRejected(c.Id, e.Message, e.Code))
-                //.SubscribeCommand<UpdateProduct>(onError: (c, e) => new UpdateProductRejected(c.Id, e.Message, e.Code))
-                // .SubscribeCommand<DeleteProduct>(onError: (c, e) => new DeleteProductRejected(c.Id, e.Message, e.Code))
-                // .SubscribeCommand<ReserveProducts>(onError: (c, e) => new ReserveProductsRejected(c.OrderId, e.Message, e.Code))
-                // .SubscribeCommand<ReleaseProducts>(onError: (c, e) => new ReleaseProductsRejected(c.OrderId, e.Message, e.Code))
-                ;
+            app.UseRabbitMq()                 ;
 
             var consulServiceId = app.UseConsul();
             applicationLifetime.ApplicationStopped.Register(() =>
@@ -95,12 +85,6 @@ namespace WePing.Service.Spid
             startupInitializer.InitializeAsync();
         }
 
-        /* static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
-         {
-             return HttpPolicyExtensions
-                 .HandleTransientHttpError()
-                 .OrResult(msg => msg.StatusCode == System.Net.HttpStatusCode.NotFound)
-                 .WaitAndRetryAsync(6, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
-         }*/
+        
     }
 }

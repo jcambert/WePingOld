@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using WePing.Data;
 using WePing.domain.ClubDetails.Dto;
 using WePing.domain.Clubs.Dto;
+using WePing.domain.Divisions.Dto;
+using WePing.domain.Epreuves.Dto;
 using WePing.domain.Equipes.Dto;
 using WePing.domain.HistoriqueClassements.Dto;
 using WePing.domain.JoueurDetails.Dto;
@@ -11,6 +14,7 @@ using WePing.domain.Licences.Dto;
 using WePing.domain.Organismes.Dto;
 using WePing.domain.Parties.Dto;
 using WePing.domain.Profiles.Dto;
+using WePing.domain.Rencontres.Dto;
 using WeReduxBlazor;
 
 namespace WePing.Services
@@ -46,19 +50,23 @@ namespace WePing.Services
     
     public class WePingState : StateBase
     {
-        public ProfileDto Profile { get; set; }
+        public MyProfile Profile { get; set; } = new MyProfile();
         public IPagedResultWithLinks<LicenceDto> Licences { get; set; } = PagedResultWithLinks<LicenceDto>.Blank();
         public IPagedResultWithLinks<JoueurDto> Joueurs { get; set; } = PagedResultWithLinks<JoueurDto>.Blank();
         public IPagedResultWithLinks<HistoriqueClassementDto> HistoriqueClassement { get; set; } = PagedResultWithLinks<HistoriqueClassementDto>.Blank();
 
         public IPagedResultWithLinks<ClubDto> Clubs { get; set; } = PagedResultWithLinks<ClubDto>.Blank();
-
+        public IPagedResultWithLinks<EpreuveDto> Epreuves { get; set; } = PagedResultWithLinks<EpreuveDto>.Blank();
+   
         public IPagedResultWithLinks<LicenceDto> LicencesForClubs { get; set; } = PagedResultWithLinks<LicenceDto>.Blank();
 
         public IPagedResultWithLinks<EquipeDto> Equipes { get; set; } = PagedResultWithLinks<EquipeDto>.Blank();
+        public IPagedResultWithLinks<DivisionDto> Divisions { get; set; } = PagedResultWithLinks<DivisionDto>.Blank();
+        
         public IPagedResultWithLinks<OrganismeDto> Organismes { get; set; } = PagedResultWithLinks<OrganismeDto>.Blank();
         public IPagedResultWithLinks<PartieDto> Parties { get; set; } = PagedResultWithLinks<PartieDto>.Blank();
 
+        public RencontreDto Rencontre { get; set; } 
 
 
         public ClubDetailDto ClubDetail { get; set; } = new ClubDetailDto();
@@ -116,6 +124,8 @@ namespace WePing.Services
                 return l.ToList();
             }
         }
+
+        internal bool HasProfile => !string.IsNullOrEmpty(Profile.NumeroLicence);
     }
 
 

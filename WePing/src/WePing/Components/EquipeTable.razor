@@ -1,6 +1,7 @@
 ﻿@using WePing.domain.Equipes.Dto
 @using WePing.domain.Organismes.Dto
 @using System.Reactive.Linq
+@inject ILogger<EquipeTable> logger
 @if (Equipes.Any())
 {
 <WeWidget Columns="new List<WeColumn>() { WeColumn.sm12, WeColumn.md6 }">
@@ -10,7 +11,7 @@
         </Title>
         <Content>
             <WePanelContent>
-                <WeTable Items="Equipes" IsHovarable="true">
+                <WeTable Items="Equipes" IsHovarable="true" OnRowClick="(EquipeDto equipe)=>ViewEquipeClassement(equipe)">
                     <THead>
                         <WeTableHeadCell>#</WeTableHeadCell>
                         <WeTableHeadCell>Division</WeTableHeadCell>
@@ -18,10 +19,11 @@
                         <WeTableHeadCell>Classement</WeTableHeadCell>
                     </THead>
                     <TBody Context="ctx">
-                        <WeTableHeadCell>@(ctx.Index + 1)</WeTableHeadCell>
+                        <WeTableCell>@(ctx.Index + 1)</WeTableCell>
                         <WeTableCell>@ctx.Item.Division</WeTableCell>
                         <WeTableCell>@(GetOrganisme(ctx.Item.GetCodeOrganisme())?.Libelle)</WeTableCell>
                         <WeTableCell><h4><span class="@GetClassForClassement(ctx.Item.Classement)"> @(ctx.Item.Classement.Item1) / @(ctx.Item.Classement.Item2)</span></h4></WeTableCell>
+                        
                     </TBody>
                 </WeTable>
             </WePanelContent>
@@ -61,6 +63,16 @@
         AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowseResultatEquipeClassementAction) ).Subscribe(mutation =>
         {
             InvokeAsync(() => StateHasChanged());
+        });
+    }
+
+    void ViewEquipeClassement(EquipeDto equipe)
+    {
+
+        logger.LogInformation($"Try to navigate to ViewEquipeClassement:{equipe.Lien}");
+        AppState.Store.Dispatch<NavigateToClassementEquipe>(a => {
+            a.NumeroClub = equipe.NumeroClub;
+            a.Lien = equipe.Lien;
         });
     }
 }

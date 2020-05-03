@@ -1,0 +1,18 @@
+﻿<WeTableCell>
+    <WeButton Color="Color.None" OnClick="@(()=>ViewClub(NumeroClub))" Class="badge badge-pill color-blue">
+        <i class="fas fa-home fa-2x"></i>
+    </WeButton>
+</WeTableCell>
+
+@code {
+    [CascadingParameter] public ReduxDevTools<WePingState,IAction>  AppState{ get; set; }
+    [Parameter] public string NumeroClub { get; set; }
+    void ViewClub(string numero)
+    {
+        AppState.Store.Dispatch<NavigateToClub>(a =>
+        {
+            a.Numero = numero;
+
+        });
+    }
+}

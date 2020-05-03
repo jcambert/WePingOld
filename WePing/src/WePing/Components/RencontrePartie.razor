@@ -1,0 +1,53 @@
+﻿@using  WePing.domain.Rencontres.Dto
+@using System.Reactive.Linq;
+@using WePing.domain
+
+<WeListGroup>
+    @foreach (var partie in Parties)
+    {
+        <WeListGroupItem Color="Color.None">
+            <WeContainer IsFluid="true">
+                <WeRow RowColumnCount="WeRowCount.Row1" HorizontalAlignment="Alignment.Center">
+                    <WeCol Columns="new List<WeColumn>() { WeColumn.lg4 ,WeColumn.sm4}">@partie.JoueurA</WeCol>
+                    <WeCol Columns="new List<WeColumn>() { WeColumn.lg2 ,WeColumn.sm2}">
+                        <ScoreBadge Score="@partie.PointsGagnesPerdusA" Statut="@partie.StatutJoueurA" AsValue="false"></ScoreBadge>
+                    </WeCol>
+                    <WeCol Columns="new List<WeColumn>() { WeColumn.lg2,WeColumn.sm2 }">
+                        <ScoreBadge Score="@partie.PointsGagnesPerdusB" Statut="@partie.StatutJoueurB" AsValue="false"></ScoreBadge>
+                    </WeCol>
+                    <WeCol Columns="new List<WeColumn>() { WeColumn.lg4,WeColumn.sm4 }">@partie.JoueurB</WeCol>
+                </WeRow>
+                <WeRow RowColumnCount="WeRowCount.Row1" Class="text-center">
+                    <hr />
+                    <WeCol Columns="new List<WeColumn>() { WeColumn.lg12 }">
+                        @foreach (var detail in partie.GetDetail())
+                        {
+                            <span class="@GetDetailClass(detail.Item2)">@detail.Item1</span>@:&nbsp;
+                        }
+                    </WeCol>
+                </WeRow>
+            </WeContainer>
+        </WeListGroupItem>
+    }
+</WeListGroup>
+
+@code {
+    [Parameter] public List<PartieRencontreDto> Parties { get; set; }
+    
+
+    /*List<(string,WePing.domain.StatutRencontre)> GetDetail(string detail)
+    {
+        List<(string, WePing.domain.StatutRencontre)> res = new List<(string, domain.StatutRencontre)>();
+        var pts = detail.Split(" ").ToList().Select(x => (Int32.Parse(x)));// > 0 ? $"11 {Int32.Parse(x)}" : $"{Int32.Parse(x) * -1} 11", Int32.Parse(x) > 0 ? WePing.domain.StatutRencontre.Gagne : domain.StatutRencontre.Perdu));
+        pts.ToList().ForEach(x =>
+        {
+            var offset = 0;
+            if (Math.Abs(x) > 10) offset = 2;
+
+            res.Add((x > 0 ? $"{11 + offset} {x}" : $"{Math.Abs(x)} {11 + offset}",x>0? StatutRencontre.Gagne:StatutRencontre.Perdu));
+        });
+        return res;
+    }*/
+    string GetDetailClass(WePing.domain.StatutRencontre statut) => statut == domain.StatutRencontre.Gagne ? "color-green" : "color-red";
+
+}

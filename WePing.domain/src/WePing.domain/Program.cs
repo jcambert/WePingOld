@@ -1,3 +1,5 @@
+using MicroS_Common.Logging;
+using MicroS_Common.Metrics;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
 
@@ -14,7 +16,10 @@ namespace WePing.domain
             Host.CreateDefaultBuilder(args)
                 .ConfigureWebHostDefaults(webBuilder =>
                 {
-                    webBuilder.UseStartup<Startup>();
+                    webBuilder.UseStartup<Startup>()
+                    .UseStartup<Startup>()
+                    .UseLogging()
+                    .UseAppMetrics(); ;
                 });
     }
 }

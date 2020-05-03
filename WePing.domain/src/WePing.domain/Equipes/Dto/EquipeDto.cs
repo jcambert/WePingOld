@@ -20,6 +20,8 @@ namespace WePing.domain.Equipes.Dto
 
         public List< ResultatEquipeClassementDto> Classements { get; set; }
 
+        public List<ResultatEquipeRencontreDto> Rencontres { get; set; }
+
         public (int,int) Classement { get; set; }
 
         public string  NumeroClub { get; set; }

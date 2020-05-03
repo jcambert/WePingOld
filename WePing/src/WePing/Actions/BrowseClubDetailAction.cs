@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using WeRedux;
-
+﻿using MicroS_Common.Actions;
 namespace WePing.Actions
 {
     public class BrowseClubDetailAction:IAction

@@ -1,0 +1,188 @@
+﻿@page "/clte/{numero}/{division}/{poule}"
+@inherits PingBasePage
+@inject ILogger<ClassementEquipe> logger
+@using WeCommon
+@using System.Reactive.Linq
+@using WePing.domain.Equipes.Dto
+@using WePing.domain.Organismes.Dto
+@using WePing.domain.Divisions.Dto
+@using WePing.domain.Epreuves.Dto
+@using WePing.domain.ResultatEquipeRencontres.Dto 
+@using WeC
+@if (Equipe != null && Epreuve != null && Organismes.HasItems)
+{
+    <WeRow RowColumnCount="WeRowCount.Row1">
+
+        <WePanel>
+            <WePanelContent>
+                <h4><p class="w700 text-justify">@($"{OrganismeLibelle},  {EpreuveLibelle}, {Equipe.Division}")  </p></h4>
+
+            </WePanelContent>
+        </WePanel>
+    </WeRow>
+}
+@if (Equipe != null)
+{
+    <WeRow RowColumnCount="WeRowCount.Row1" Class="justify-content-md-center">
+        <WeWidget Columns="new List<WeColumn>() { WeColumn.sm12, WeColumn.md4 }">
+            <WePanel>
+                <WePanelContent>
+                    <WeTable Items="Equipe.Classements" IsHovarable="true" IsStriped="true" >
+                        <THead>
+                            <WeTableHeadCell>Classement</WeTableHeadCell>
+                            <WeTableHeadCell>Equipe</WeTableHeadCell>
+                            <WeTableHeadCell>Points</WeTableHeadCell>
+                            <WeTableHeadCell>Club</WeTableHeadCell>
+                        </THead>
+                        <TBody Context="clt">
+                            <WeTableCell>
+                                <h5 style="display:inline-flex;padding-right: 50px;">
+                                    <span class="@GetClassementBadgeClass(clt.Index,Equipe.Classements.Count)" style="border-radius:50%"> @(clt.Item.Classement)</span>
+                                </h5>
+                            </WeTableCell>
+                            <WeTableCell><p class="w600">@clt.Item.Equipe</p></WeTableCell>
+                            <WeTableCell><p class="w600">@clt.Item.Points</p></WeTableCell>
+                           
+                            <TableCellNavigateToClub NumeroClub="@clt.Item.Numero"></TableCellNavigateToClub>
+                        </TBody>
+                    </WeTable>
+
+                </WePanelContent>
+            </WePanel>
+        </WeWidget>
+    </WeRow>
+}
+@if (Equipe != null && Equipe.Rencontres != null)
+{
+    <WeRow>
+
+        @foreach (var rencontre in (from r in Equipe.Rencontres group r by r.GetPouleInformations() into grp select grp).WithIndex())
+        {
+
+            <WeWidget Columns="new List<WeColumn>() { WeColumn.sm12, WeColumn.md4 }">
+                <WePanel Class="">
+                    <Title>
+                        <WePanelTitle Title="@($"Journee {rencontre.index + 1}")" SubTitle="@($"Le {rencontre.item.Key.Item3.ToString("d MMM yyyy")}")" IsCloseable="true" IsCollapseable="true">
+                            <TitleContent>
+                                <h3 style="display:inline-flex;padding-right: 50px;"><span class="badge badge-pill badge-dark" style="border-radius:50%"> @(rencontre.index + 1)</span></h3>
+                                <h4 style="display:contents;">@rencontre.item.Key.Item3.ToString("d MMM yyyy")</h4>
+                            </TitleContent>
+                        </WePanelTitle>
+                    </Title>
+                    <Content>
+                        <WeTable Items="rencontre.item.ToList()" IsHovarable="true" IsStriped="true" OnRowClick="@((ResultatEquipeRencontreDto rencontre)=>ViewDetailRencontre(rencontre))">
+                            <THead>
+                                <WeTableHeadCell Class="width-33 text-left">Equipe A</WeTableHeadCell>
+                                <WeTableHeadCell Class="text-right">Score A</WeTableHeadCell>
+                                <WeTableHeadCell>&nbsp;</WeTableHeadCell>
+                                <WeTableHeadCell Class="text-left">Score B</WeTableHeadCell>
+                                <WeTableHeadCell Class="width-33 text-right">Equipe B</WeTableHeadCell>
+                            </THead>
+                            <TBody Context="r">
+                                @if (!string.IsNullOrEmpty(r.Item.ScoreA) && !string.IsNullOrEmpty(r.Item.ScoreB))
+                                        {
+                                    <WeTableCell Class="text-left w700">@r.Item.EquipeA</WeTableCell>
+                                    <WeTableCell Class="text-right w700">
+                                        <h5><WeBadge Color="GetScoreColor(r.Item.ScoreA, r.Item.ScoreB)">@r.Item.ScoreA</WeBadge></h5>
+                                    </WeTableCell>
+                                    <WeTableHeadCell>-</WeTableHeadCell>
+                                    <WeTableCell Class="text-left w700">
+                                        <h5><WeBadge Color="GetScoreColor(r.Item.ScoreB, r.Item.ScoreA)">@r.Item.ScoreB</WeBadge></h5>
+                                    </WeTableCell>
+                                    <WeTableCell Class="text-right w700">@r.Item.EquipeB</WeTableCell>
+                                        }
+                                        else
+                                        {
+                                    <WeTableCell Class="text-left w700">@r.Item.EquipeA</WeTableCell>
+                                    <WeTableCell Class="text-right w700"></WeTableCell>
+                                    <WeTableHeadCell Class=" w700">-</WeTableHeadCell>
+                                    <WeTableCell Class="text-left w700"></WeTableCell>
+                                    <WeTableCell Class="text-right w700">@r.Item.EquipeB</WeTableCell>
+                                        }
+                            </TBody>
+                        </WeTable>
+                    </Content>
+                </WePanel>
+            </WeWidget>
+
+        }
+
+    </WeRow>
+}
+@code {
+    [Parameter] public string Numero { get; set; }
+    [Parameter] public string Division { get; set; }
+    [Parameter] public string Poule { get; set; }
+    public IPagedResultWithLinks<OrganismeDto> Organismes => AppState.Store.State.Organismes;
+    public EquipeDto Equipe => AppState.Store.State.Equipes.Items.Where(e => e.GetDivision() == Division && e.GetPouleId() == Poule && e.NumeroClub == Numero).FirstOrDefault();
+    public List<EquipeDto> Equipes => AppState.Store.State.Equipes.Items.Where(e => e.GetDivision() == Division && e.GetPouleId() == Poule).ToList();
+    private OrganismeDto GetOrganisme(string id) => Organismes.Items.Where(o => o.Id == id).FirstOrDefault();
+    private IPagedResultWithLinks<DivisionDto> Divisions => AppState.Store.State.Divisions;
+    private EpreuveDto Epreuve => AppState.Store.State.Epreuves.Items.Where(e => e.Id == Equipe?.Id).FirstOrDefault();
+    string EpreuveLibelle => Epreuve.Libelle;
+    string OrganismeLibelle => GetOrganisme(Equipe.GetCodeOrganisme()).Libelle;
+    (string, string, DateTime) PouleInformation { get; set; }
+    Color GetScoreColor(string a, string b)
+    {
+        if (string.IsNullOrEmpty(a) || string.IsNullOrEmpty(b)) return Color.None;
+        int _a, _b;
+        if (!Int32.TryParse(a, out _a)) return Color.None;
+        if (!Int32.TryParse(b, out _b)) return Color.None;
+        return _a > _b ? Color.Success : _b > _a ? Color.Danger : Color.Primary;
+    }
+    string GetClassementBadgeClass(int classement, int count)
+    {
+        int clt = classement+1;
+        //if (!Int32.TryParse(classement, out clt)) return "badge  badge-primary";
+        if (clt <= 2) return "badge  badge-success";
+
+        if (clt == (count - 1)) return "badge  badge-warning";
+        if (clt == count ) return "badge  badge-danger";
+        return "badge  badge-primary";
+    }
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowseResultatEquipeRencontresAction)).Subscribe(mutations =>
+        {
+        }).AddDisposable(disposables);
+        AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowseResultatEquipeClassementAction)).Subscribe(mutations =>
+        {
+        }).AddDisposable(disposables);
+        AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowseEquipeAction)).Subscribe(async (mutation) =>
+        {
+            var equipe = mutation.State.Equipes.Items.Where(e => e.GetDivision() == Division && e.GetPouleId() == Poule).FirstOrDefault();
+            if (equipe != null)
+            {
+                await AppState.Store.DispatchAsync<BrowseResultatEquipeClassementAction>(a => { a.Division = Division; a.Poule = Poule; });
+                await AppState.Store.DispatchAsync<BrowseResultatEquipeRencontresAction>(a => { a.Division = Division; a.Poule = Poule; });
+                PouleInformation = equipe.Rencontres?.FirstOrDefault().GetPouleInformations() ?? ("", "", DateTime.Now);
+            }
+        }).AddDisposable(disposables);
+        AppState.Store.OnChanged.Subscribe(async (mutation) =>
+        {
+            if (Equipe != null && Organismes.Items.Any() && !Divisions.Items.Any())
+            {
+                await AppState.Store.DispatchAsync<BrowseDivisionAction>(a => { a.Epreuve = Equipe.Id; a.Organisme = Equipe.GetCodeOrganisme(); });
+                await AppState.Store.DispatchAsync<BrowseEpreuvesAction>(a => { a.Organisme = Equipe.GetCodeOrganisme(); });
+            }
+        }).AddDisposable(disposables);
+    }
+    protected override async Task LoadDatas()
+    {
+        await AppState.Store.DispatchAsync<BrowseOrganismesAction>(a => { });
+        await AppState.Store.DispatchAsync<GetClubAction>(a => a.Numero = Numero);
+        await AppState.Store.DispatchAsync<BrowseEquipeAction>(a => a.Numero = Numero);
+
+
+    }
+
+    void ViewDetailRencontre(ResultatEquipeRencontreDto rencontre)
+    {
+        AppState.Store.Dispatch<NavigateToDetailRencontre>(a =>
+        {
+            a.Lien = rencontre.Lien;
+
+        });
+    }
+}

@@ -25,6 +25,7 @@ namespace WePing.Service.Spid
                     .UseLogging()
                     //.UseVault()
                     .UseLockbox()
+                     .UseLogging()
                     .UseAppMetrics();
                     ;
                 });

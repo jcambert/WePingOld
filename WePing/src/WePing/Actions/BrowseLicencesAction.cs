@@ -1,6 +1,5 @@
-﻿using System.Text.Json;
-using WeRedux;
-
+﻿using MicroS_Common.Actions;
+using System.Text.Json;
 namespace WePing.Actions
 {
     public class BrowseLicencesAction : IAction

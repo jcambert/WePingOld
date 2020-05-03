@@ -1,18 +1,19 @@
 ﻿@page "/player/{licence}"
 @inherits PingBasePage
+
 @using System.Globalization
 @using WeChart
 @using WeC
 @using System.ComponentModel
-@using WeCommon
-@inject Helper _helper
-
 @using System.Reactive.Linq
 @using WePing.domain.Licences.Dto
 @using WePing.domain.JoueurDetails.Dto
 @using WePing.domain.Clubs.Dto
 @using WePing.domain.Parties.Dto
 @using WePing.domain.HistoriqueClassements.Dto
+@using WeCommon
+@inject Helper _helper
+@inject ILogger<Player> logger
 <WeRow Class="d-none d-md-block">
     @if (Licencie != null)
     {
@@ -183,7 +184,7 @@
                                             }
                                             else if ((AppState.Store.State.Parties?.Items?.Any() ?? false) && (_graphicType.Item3 == GraphicType.Distribution))
                                             {
-                                                <Chart Options="ChartDistributionOptions" DefaultChartType="bubble" >
+                                                <Chart Options="ChartDistributionOptions" DefaultChartType="bubble">
                                                     <WeSerieBubble Label="Victoires:" Values="DistributionPositiveValues" Backgrounds="DistributionPositiveBackground" BorderColor="DistributionPositiveBorder" HoverBackgroundColor="DistributionPositiveHoverBackground" HoverBorderWidth="DistributionPositiveHoverBorderWidth"></WeSerieBubble>
                                                     <WeSerieBubble Label="Défaites:" Values="DistributionNegativeValues" Backgrounds="DistributionNegativeBackground" BorderColor="DistributionNegativeBorder" HoverBackgroundColor="DistributionNegativeHoverBackground" HoverBorderWidth="DistributionNegativeHoverBorderWidth"> </WeSerieBubble>
                                                 </Chart>
@@ -372,7 +373,6 @@
     </WeRow>
 }
 @code {
-
     private string _licence;
     [Parameter]
     public string Licence
@@ -380,13 +380,12 @@
         get => _licence;
         set
         {
-            if (_licence != value)
-            {
-                _licence = value;
-                //InvokeAsync(()=>LoadDatas());
-            }
+            logger.LogInformation($"Licence set to {value}");
+            _licence = value;
         }
     }
+
+
     private LicenceDto Licencie => AppState.Store.State.Licence;
     private JoueurDetailDto Joueur => AppState.Store.State.Joueur;
     private ClubDto Club => AppState.Store.State.Club;
@@ -408,7 +407,7 @@
     private List<(DateTime, float)> JourneeClassement { get; set; }
     private List<(DateTime, int)> JourneeVictoire { get; set; }
     private List<(DateTime, int)> JourneeDefaite { get; set; }
-    private List<BubbleData> DistributionPositiveValues{ get; set; }
+    private List<BubbleData> DistributionPositiveValues { get; set; }
     private List<BubbleData> DistributionNegativeValues { get; set; }
     private List<WeColor> DistributionPositiveBackground { get; set; }
     private List<WeColor> DistributionNegativeBackground { get; set; }
@@ -422,10 +421,10 @@
     private List<string> DistributionLabels { get; set; }
     private int Classement => Licencie.Classement;
     private int PointsMensuels => Licencie.PointsMensuels;
-    private int PointsPhase1 => Licencie.PointsPhase1;
-    private int PointsPhase2 => Licencie.PointsPhase2;
-    private int ProgressionMensuelle => Licencie.ProgressionMensuelle;
-    private int ProgressionGenerale => Licencie.ProgressionGenerale;
+    private int PointsPhase1 => Licencie?.PointsPhase1 ?? 0;
+    private int PointsPhase2 => Licencie?.PointsPhase2 ?? 0;
+    private int ProgressionMensuelle => Licencie?.ProgressionMensuelle ?? 0;
+    private int ProgressionGenerale => Licencie?.ProgressionGenerale ?? 0;
     private float GetPointsGagnesPerdus(PartieGroupe pg) => Parties.Where(p => p.Date == pg.Date).Sum(p => p.PointsGagnesPerdus);
     private IOptions ChartOptions =>
         new Options()
@@ -442,9 +441,9 @@
            Legend = new OptionLegend() { Display = false },
            Responsive = true,
            AspectRatio = 2,
-           Tooltips=new OptionTooltip()
+           Tooltips = new OptionTooltip()
            {
-               Callbacks= "label:function(t,d){ return t.yLabel+' ' + d.datasets[t.datasetIndex].label +  'sur Clt:' + t.xLabel + ' Points:' + t.value ;}"
+               Callbacks = "label:function(t,d){ return t.yLabel+' ' + d.datasets[t.datasetIndex].label +  'sur Clt:' + t.xLabel + ' Points:' + t.value ;}"
            }
        };
 
@@ -452,74 +451,79 @@
     private LineStyle ls_danger { get; set; } = new LineStyle() { Background = WeColor.DarkRed, BorderStyle = new BorderStyle() { Width = 2 } };
     private LineStyle ls_success { get; set; } = new LineStyle() { Background = WeColor.DarkGreen, BorderStyle = new BorderStyle() { Width = 2 } };
 
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+
+    protected override async Task OnInitializedAsync()
     {
-        await base.OnAfterRenderAsync(firstRender);
-        if (firstRender)
+        await base.OnInitializedAsync();
+        logger.LogInformation("OnInitializedAsync");
+        _graphicType = _graphicTypes.Where(x => x.Item3 == GraphicType.HistoriqueClassement).First();
+        AppState.Store.OnChanged.Where(a => a.Action == typeof(GetJoueurAction)).Subscribe(mutation =>
         {
-            AppState.Store.OnChanged.Where(a => a.Action == typeof(GetJoueurAction)).Subscribe(
-               mutation =>
-               {
-                   AppState.Store.Dispatch<BrowsePartiesAction>(a => a.Licence = Joueur.Licence);
-               });
+            logger.LogTrace("OnGetJoueurAction");
+            AppState.Store.Dispatch<BrowsePartiesAction>(a => a.Licence = Licence);
+        })
+            .AddDisposable(disposables);
 
-            AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowsePartiesAction)).Subscribe(mutation =>
+        AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowsePartiesAction)).Subscribe(mutation =>
+        {
+            logger.LogTrace("OnBrowsePartiesAction");
+            PartiesOrderedByPoints = AppState.Store.State.Parties.Items.OrderByDescending(p => p.PointsGagnesPerdus).ToList();
+            PartiesGroupees = (from p in Parties group p by new PartieGroupe() { Date = p.Date, Epreuve = p.Epreuve, Coeficient = p.Coeficient } into grp select grp).ToList();
+            ClassementGroupes = (from p in Parties orderby p.ClassementAdversaire descending group p by new ClassementGroupe() { Classement = p.ClassementAdversaire } into grp select grp).ToList();
+            PointsGroupes = (from p in Parties orderby p.PointsGagnesPerdus descending group p by new PointGroupe() { Points = Math.Round(p.PointsGagnesPerdus) } into grp select grp).ToList();
+            NombreDeVictoires = Parties.Where(p => p.VictoireDefaite == "V").Count();
+            NombreDeDefaites = Parties.Where(p => p.VictoireDefaite == "D").Count();
+            NombreParties = Parties.Count();
+            PointsDeVictoire = Parties.Where(p => p.VictoireDefaite == "V").Select(p => p.PointsGagnesPerdus).Sum();
+            PointsDeDefaite = Parties.Where(p => p.VictoireDefaite == "D").Select(p => p.PointsGagnesPerdus).Sum();
+            PointsParties = Parties.Select(p => p.PointsGagnesPerdus).Sum();
+
+            JourneePoints = Parties.OrderBy(x => x.Date).GroupBy(x => x.Date).Select(v => (v.Key, v.Sum(w => w.PointsGagnesPerdus))).ToList();
+            JourneeClassement = new List<(DateTime, float)>();
+
+            var firstPartie = JourneePoints.FirstOrDefault();
+            Func<int, int> calcPhase = (int month) => (month >= 1 && month <= 8) ? 2 : 1;
+
+            int year = firstPartie.Item1.Year;
+            int month = firstPartie.Item1.Month;
+            int phase = calcPhase(month);
+            JourneeClassement.Add((new DateTime(year, phase == 2 ? 1 : 9, 1), (float)PointsPhase1));
+
+            for (int i = 1; i <= JourneePoints.Count(); i++)
             {
-                PartiesOrderedByPoints = AppState.Store.State.Parties.Items.OrderByDescending(p => p.PointsGagnesPerdus).ToList();
-                PartiesGroupees = (from p in Parties group p by new PartieGroupe() { Date = p.Date, Epreuve = p.Epreuve, Coeficient = p.Coeficient } into grp select grp).ToList();
-                ClassementGroupes = (from p in Parties orderby p.ClassementAdversaire descending group p by new ClassementGroupe() { Classement = p.ClassementAdversaire } into grp select grp).ToList();
-                PointsGroupes = (from p in Parties orderby p.PointsGagnesPerdus descending group p by new PointGroupe() { Points = Math.Round(p.PointsGagnesPerdus) } into grp select grp).ToList();
-                NombreDeVictoires = Parties.Where(p => p.VictoireDefaite == "V").Count();
-                NombreDeDefaites = Parties.Where(p => p.VictoireDefaite == "D").Count();
-                NombreParties = Parties.Count();
-                PointsDeVictoire = Parties.Where(p => p.VictoireDefaite == "V").Select(p => p.PointsGagnesPerdus).Sum();
-                PointsDeDefaite = Parties.Where(p => p.VictoireDefaite == "D").Select(p => p.PointsGagnesPerdus).Sum();
-                PointsParties = Parties.Select(p => p.PointsGagnesPerdus).Sum();
-
-                JourneePoints = Parties.OrderBy(x => x.Date).GroupBy(x => x.Date).Select(v => (v.Key, v.Sum(w => w.PointsGagnesPerdus))).ToList();
-                JourneeClassement = new List<(DateTime, float)>();
-
-                var firstPartie = JourneePoints.FirstOrDefault();
-                Func<int, int> calcPhase = (int month) => (month >= 1 && month <= 8) ? 2 : 1;
-
-                int year = firstPartie.Item1.Year;
-                int month = firstPartie.Item1.Month;
-                int phase = calcPhase(month);
-                JourneeClassement.Add((new DateTime(year, phase == 2 ? 1 : 9, 1), (float)PointsPhase1));
-
-                for (int i = 1; i <= JourneePoints.Count(); i++)
+                if (calcPhase(JourneePoints[i - 1].Item1.Month) != phase)
                 {
-                    if (calcPhase(JourneePoints[i - 1].Item1.Month) != phase)
+                    phase = calcPhase(JourneePoints[i - 1].Item1.Month);
+                    if (phase == 2)
                     {
-                        phase = calcPhase(JourneePoints[i - 1].Item1.Month);
-                        if (phase == 2)
-                        {
-                            JourneeClassement.Add((new DateTime(year + 1, 1, 1), (float)PointsPhase2));
-                        }
+                        JourneeClassement.Add((new DateTime(year + 1, 1, 1), (float)PointsPhase2));
                     }
-                    JourneeClassement.Add((JourneePoints[i - 1].Item1, JourneePoints[i - 1].Item2 + JourneeClassement.Last().Item2));
                 }
+                JourneeClassement.Add((JourneePoints[i - 1].Item1, JourneePoints[i - 1].Item2 + JourneeClassement.Last().Item2));
+            }
 
 
-                JourneeVictoire = Parties.OrderBy(x => x.Date).GroupBy(x => x.Date).Select(v => (v.Key, v.Count(w => w.VictoireDefaite == "V"))).ToList();
-                JourneeDefaite = Parties.OrderBy(x => x.Date).GroupBy(x => x.Date).Select(v => (v.Key, v.Count(w => w.VictoireDefaite == "D"))).ToList();
+            JourneeVictoire = Parties.OrderBy(x => x.Date).GroupBy(x => x.Date).Select(v => (v.Key, v.Count(w => w.VictoireDefaite == "V"))).ToList();
+            JourneeDefaite = Parties.OrderBy(x => x.Date).GroupBy(x => x.Date).Select(v => (v.Key, v.Count(w => w.VictoireDefaite == "D"))).ToList();
 
-                DistributionPositiveValues = new List<BubbleData>();
-                DistributionNegativeValues = new List<BubbleData>();
-                DistributionPositiveBackground = new List<WeColor>();
-                DistributionNegativeBackground = new List<WeColor>();
-                DistributionPositiveBorder = new List<WeColor>();
-                DistributionNegativeBorder = new List<WeColor>();
-                DistributionPositiveHoverBackground = new List<WeColor>();
-                DistributionNegativeHoverBackground = new List<WeColor>();
-                DistributionPositiveHoverBorderWidth = new List<int>();
-                DistributionNegativeHoverBorderWidth = new List<int>();
-                DistributionLabels = new List<string>();
+            DistributionPositiveValues = new List<BubbleData>();
+            DistributionNegativeValues = new List<BubbleData>();
+            DistributionPositiveBackground = new List<WeColor>();
+            DistributionNegativeBackground = new List<WeColor>();
+            DistributionPositiveBorder = new List<WeColor>();
+            DistributionNegativeBorder = new List<WeColor>();
+            DistributionPositiveHoverBackground = new List<WeColor>();
+            DistributionNegativeHoverBackground = new List<WeColor>();
+            DistributionPositiveHoverBorderWidth = new List<int>();
+            DistributionNegativeHoverBorderWidth = new List<int>();
+            DistributionLabels = new List<string>();
+            if (Parties.Any())
+            {
                 var cltMinMax = (Parties.Select(p => p.ClassementAdversaire).Min(), Parties.Select(p => p.ClassementAdversaire).Max());
-                for (int i = cltMinMax.Item1-1; i <=cltMinMax.Item2+1; i++)
+                for (int i = cltMinMax.Item1 - 1; i <= cltMinMax.Item2 + 1; i++)
                 {
                     DistributionLabels.Add(i.ToString());
-                    var v=Parties.Where(p => p.VictoireDefaite == "V" && p.ClassementAdversaire==i).Select(p => p.PointsGagnesPerdus);
+                    var v = Parties.Where(p => p.VictoireDefaite == "V" && p.ClassementAdversaire == i).Select(p => p.PointsGagnesPerdus);
                     var d = Parties.Where(p => p.VictoireDefaite == "D" && p.ClassementAdversaire == i).Select(p => p.PointsGagnesPerdus);
                     if (v.Any())
                     {
@@ -538,31 +542,29 @@
                         DistributionNegativeHoverBorderWidth.Add(3);
                     }
                 }
-                InvokeAsync(() => StateHasChanged());
-            });
-            AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowseHistoriqueClassementAction)).Subscribe(mutation =>
-            {
-                HistoClassLabels = mutation.State.HistoriqueClassement.Items.Select(h => h.Saison).ToList();
-                HistoClassValues = mutation.State.HistoriqueClassement.Items.Select(h => h.Point).ToList();
-                InvokeAsync(() => StateHasChanged());
-            });
-            await LoadDatas();
-        }
+
+            }
+             InvokeAsync(() => StateHasChanged());
+        })
+        .AddDisposable(disposables);
+
+        AppState.Store.OnChanged.Where(a => a.Action == typeof(BrowseHistoriqueClassementAction)).Subscribe(mutation =>
+        {
+            logger.LogTrace("OnBrowseHistoriqueClassementAction");
+            HistoClassLabels = mutation.State.HistoriqueClassement.Items.Select(h => h.Saison).ToList();
+            HistoClassValues = mutation.State.HistoriqueClassement.Items.Select(h => h.Point).ToList();
+            InvokeAsync(() => StateHasChanged());
+        })
+            .AddDisposable(disposables);
     }
 
-    protected override void OnInitialized()
-    {
-        base.OnInitialized();
-        _graphicType = _graphicTypes.Where(x => x.Item3 == GraphicType.HistoriqueClassement).First();
-    }
+
     protected override async Task LoadDatas()
     {
-        await AppState.Store.DispatchAsync<GetLicenceAction>
-            (a => { a.Licence = Licence; });
-        await AppState.Store.DispatchAsync<GetJoueurAction>
-            (a => { a.Licence = Licence; });
-        await AppState.Store.DispatchAsync<BrowseHistoriqueClassementAction>(
-            a => { a.Licence = Licence; });
+        logger.LogInformation("LoadDatas");
+        await AppState.Store.DispatchAsync<GetLicenceAction>(a => { a.Licence = Licence; });
+        await AppState.Store.DispatchAsync<GetJoueurAction>(a => { a.Licence = Licence; });
+        await AppState.Store.DispatchAsync<BrowseHistoriqueClassementAction>(a => { a.Licence = Licence; });
     }
 
     private struct PartieGroupe
@@ -658,4 +660,6 @@
     }
     string GenerateButtonId(GraphicType type) => $"btn-{type.ToString()}";
     string ButtonClubId = Guid.NewGuid().ToString().Replace("-", "");
+
+
 }

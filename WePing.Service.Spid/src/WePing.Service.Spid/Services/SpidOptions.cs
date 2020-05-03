@@ -41,6 +41,7 @@ namespace WePing.Service.Spid.Services
         internal const string PARTIES_ = "joueur_partie_spid";
         internal const string ACTUALITES = "actu_fftt";
         internal const string HISTO_CLASSEMENT = "joueur_historique_cla";
+        internal const string RENCONTRES = "rencontre";
         public SpidOptions(IConfiguration config, ILogger<SpidOptions> logger)
         {
             this._logger = logger;

@@ -1,10 +1,17 @@
 ﻿@inherits LayoutComponentBase
+@implements IDisposable
 @inject IActionService actions
-
+@inject ILogger<DesktopLayout> logger
+@using WePing.Data
+@using System.Reactive.Linq
+@using MicroS_Common.Actions
 <ReduxDevTools TState="WePingState" TAction="IAction" @ref="AppState" AllowDebug="false" UseLocalStorage="false">
     <ChildContent>
         <CascadingValue Value="AppState">
-            <WeDashboard Title="WePing" Icon="fas fa-table-tennis" Menus="Menus" SidebarSide="Side.Left" ShowProfile="true" OnBrandClick="NavigateToHome">
+            <WeDashboard @ref="Dashboard" Title="WePing" Icon="fas fa-table-tennis" Menus="Menus" SidebarSide="Side.Left" ShowProfile="@HasProfile" ShowMenu="@HasProfile" OnBrandClick="NavigateToHome" OnMenuItemClick="MenuClick">
+                <Profile>
+                    <WeSidebarProfile Welcome="Bienvenue" Avatar="_content/WeStrap/img/male.png" Name="@ProfileName"></WeSidebarProfile>
+                </Profile>
                 <MainContent>@Body</MainContent>
             </WeDashboard>
         </CascadingValue>
@@ -16,14 +23,76 @@
 
 
 @code{
+    private IDisposable storeChangedDisposable;
+    private IDisposable storeChangedDisposable0;
     public ReduxDevTools<WePingState, IAction> AppState { get; set; }
     protected IStore<WePingState, IAction> Store => AppState.Store;
-    protected List<WeMenuItem> Menus = new List<WeMenuItem>();
+    WeDashboard Dashboard { get; set; }
+    public string ProfileName { get; set; } = string.Empty;
+    public MyProfile Profile => AppState.Store.State.Profile;
+    public bool HasProfile => AppState.Store.State.HasProfile;
+    public List<WeMenuItem> Menus { get; set; } = new List<WeMenuItem>() {
+        new WeMenuItem(){
+            Title="General"
+        }
+    };
     void NavigateToHome()
     {
+        logger.LogInformation("want Navigate to home");
         AppState.Store.Dispatch<NavigateToHome>();
 
     }
 
+    void MenuClick(WeMenuItemEventArgs<WeMenuItem> args)
+    {
+        AppState.Store.Dispatch(args.Item.Action);
 
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        await base.OnAfterRenderAsync(firstRender);
+        if (firstRender)
+        {
+            logger.LogInformation("Rendering 1st DesktopLayout");
+            Menus.FirstOrDefault()?.Childs?.Clear();
+            storeChangedDisposable = AppState.Store.OnChanged.Subscribe(state =>
+            {
+                logger.LogInformation("The Store has changed => ReRender");
+                InvokeAsync(() => StateHasChanged());
+            });
+            storeChangedDisposable0 = AppState.Store.OnChanged.Where(mutation => mutation.Action == typeof(GetMyProfileAction)).Subscribe(mutation =>
+            {
+                if (HasProfile)
+                {
+                    ProfileName = mutation.State.Profile.Joueur.Prenom;
+                    Menus.FirstOrDefault()?.Childs?.Add(new WeMenuItem()
+                    {
+                        Title = "Mes stats",
+                        Icon = "fas fa-chart-pie",
+                        Action = new NavigateToPlayer() { Licence = Profile.NumeroLicence }
+                    });
+                    Menus.FirstOrDefault()?.Childs?.Add(new WeMenuItem()
+                    {
+                        Title = "Mon Club",
+                        Icon = "fas fa-home",
+                        Action = new NavigateToClub() { Numero = Profile.Joueur.NumeroClub }
+                    });
+                    InvokeAsync(() => StateHasChanged());
+                }
+            });
+            AppState.Store.Dispatch<GetMyProfileAction>();
+            await AppState.Redux.LoadStoreAsync();
+
+            logger.LogInformation("Rendered 1st DesktopLayout");
+        }
+    }
+
+
+    public void Dispose()
+    {
+        storeChangedDisposable?.Dispose();
+        storeChangedDisposable0?.Dispose();
+    }
 }

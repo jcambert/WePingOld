@@ -8,7 +8,7 @@ namespace WePing.domain.ResultatEquipeRencontres.Queries
         public string Action { get; } = "";
 
         public string Auto { get; } = "1";
-
+        [UpperCase]
         public string D1 { get; set; }
 
         public string Cx_poule { get; set; }

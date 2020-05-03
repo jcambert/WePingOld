@@ -1,11 +1,11 @@
-﻿using Microsoft.AspNetCore.Components;
+﻿using MicroS_Common.Actions;
+using Microsoft.AspNetCore.Components;
 using System;
 using System.Threading.Tasks;
 using WePing.Services;
 using WeRedux;
 using WeReduxBlazor;
 using WeStrap;
-
 namespace WePing.Components.Base
 {
     public abstract class WePingComponentBase : WeTag

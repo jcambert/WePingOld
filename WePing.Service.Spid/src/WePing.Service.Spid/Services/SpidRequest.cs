@@ -37,6 +37,8 @@ using WePing.domain.Organismes.Domain;
 using WePing.domain.Organismes.Queries;
 using WePing.domain.Parties.Domain;
 using WePing.domain.Parties.Queries;
+using WePing.domain.Rencontres.Domain;
+using WePing.domain.Rencontres.Queries;
 using WePing.domain.ResultatEquipeRencontres.Domain;
 using WePing.domain.ResultatEquipeRencontres.Queries;
 using WePing.domain.ResultatIndividuels.Domain;
@@ -55,6 +57,7 @@ namespace WePing.Service.Spid.Services
         Task<List<Organisme>> GetOrganismes(BrowseOrganismes query);
         Task<List<Epreuve>> GetEpreuves(BrowseEpreuves query);
         Task<List<Division>> GetDivisions(BrowseDivisions query);
+       
         Task<List<ResultatEquipeRencontre>> GetResultatEquipeRencontres(BrowseResultatEquipeRencontres query);
         Task<List<ResultatEquipePoule>> GetResultatEquipePoules(BrowseResultatEquipePoules query);
         Task<List<ResultatEquipeClassement>> GetResultatEquipeClassements(BrowseResultatEquipeClassements query);
@@ -64,6 +67,7 @@ namespace WePing.Service.Spid.Services
         Task<List<ResultatIndividuelPartie>> GetResultatIndividuelParties(BrowseResultatIndividuelPartie query);
         Task<List<ClassementJoueur>> GetClassementJoueurs(BrowseClassementJoueurs query);
         Task<List<Joueur>> GetJoueurs(BrowseJoueur query);
+        Task<Rencontre> GetRencontre(GetRencontre query);
         Task<JoueurDetail> GetJoueurDetails(GetJoueurDetail query);
         Task<Licence> GetLicence(GetLicence query);
         Task<List<Licence>> GetLicences(BrowseLicences query);
@@ -200,7 +204,12 @@ namespace WePing.Service.Spid.Services
             return data.Deserialize<ListeLicences>().Licences.First();
         }
 
-
+        public async Task<Rencontre> GetRencontre(GetRencontre query)
+        {
+            var data = await Execute(query, SpidOptions.RENCONTRES);
+            var res = data.Deserialize<Rencontre>();
+            return res;
+        }
 
         public async Task<List<Licence>> GetLicences(BrowseLicences query)
         {
@@ -258,6 +267,8 @@ namespace WePing.Service.Spid.Services
             var data = await Execute(query, SpidOptions.HISTO_CLASSEMENT);
             return data.Deserialize<ListeHistoriqueClassements>().Historiques;
         }
+
+        
     }
     internal static class Extensions
     {

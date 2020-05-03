@@ -41,6 +41,7 @@ namespace weping.api.Controllers
         {
             _spid = service;
             _logger = logger;
+            _logger.LogInformation("SpidController Created");
         }
 
         [Cached()]
@@ -104,10 +105,7 @@ namespace weping.api.Controllers
         public async Task<IActionResult> GetResultatEquipeClassement([FromQuery] BrowseResultatEquipeClassements query)
             => Collection(await _spid.GetResultatEquipeClassement(query));
 
-        [HttpGet("rencontre")]
-        [AllowAnonymous]
-        public async Task<IActionResult> GetRencontres([FromQuery] BrowseRencontres query)
-            => Collection(await _spid.GetRencontres(query));
+        
 
         [Cached()]
         [HttpGet("equipes")]
@@ -156,6 +154,11 @@ namespace weping.api.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetLicence([FromRoute] GetLicence query)
             => Single(await _spid.GetLicence(query.Licence));
+        [Cached()]
+        [HttpGet("rencontre")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetRencontre([FromQuery] GetRencontre query)
+            => Single(await _spid.GetRencontre(query));
 
         [Cached()]
         [HttpGet("licences")]
