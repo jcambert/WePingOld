@@ -12,15 +12,14 @@ namespace WePing.Service.Spid.Handlers
     public abstract class BaseGet<TDomain, TGetQuery, TDto> : IQueryHandler<TGetQuery, TDto>
         where TGetQuery : IQuery<TDto>
     {
-        private readonly ISpidRequest _spid;
         private readonly IMapper _mapper;
         public BaseGet(IMapper mapper, ISpidRequest request)
         {
             this._mapper = mapper;
-            this._spid = request;
+            this.Spid = request;
         }
 
-        public ISpidRequest Spid => _spid;
+        public ISpidRequest Spid { get; }
         public abstract Func<TGetQuery, Task<TDomain>> Execute { get; }
 
         public async Task<TDto> HandleAsync(TGetQuery query)

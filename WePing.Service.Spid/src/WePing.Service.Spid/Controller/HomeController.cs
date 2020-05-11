@@ -2,7 +2,6 @@
 using MicroS_Common.Dispatchers;
 using MicroS_Common.Types;
 using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 using WePing.domain.ActuFftts.Dto;
 using WePing.domain.ActuFftts.Queries;
