@@ -1,19 +1,20 @@
-﻿using MicroS_Common.RabbitMq;
+﻿using MicroS_Common;
+using MicroS_Common.Controllers;
+using MicroS_Common.Dispatchers;
+using MicroS_Common.RabbitMq;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using OpenTracing;
 
 namespace weping.api.Controllers
 {
-    [Route("")]
+ 
     public class HomeController : BaseController
     {
-        public HomeController(IBusPublisher busPublisher, ITracer tracer) : base(busPublisher, tracer)
+        public HomeController(IDispatcher dispatcher, IConfiguration configuration, IOptions<AppOptions> appOptions) : base(dispatcher, configuration, appOptions)
         {
         }
-
-        [HttpGet]
-        [AllowAnonymous]
-        public IActionResult Get() => Ok("WePing API");
     }
 }

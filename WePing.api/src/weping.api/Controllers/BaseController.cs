@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 
 namespace weping.api.Controllers
 {
+    /*
     [Route("[controller]")]
     [ApiController]
     [JwtAuth]
@@ -92,7 +93,7 @@ namespace weping.api.Controllers
                 resource = $"{resource}/{resourceId}";
             }
 
-            return CorrelationContext.Create<T>(Guid.NewGuid(), UserId, resourceId ?? Guid.Empty,
+            return CorrelationContext.Create<T>(Guid.NewGuid().ToString(), UserId, resourceId ?? Guid.Empty,
                HttpContext.TraceIdentifier, HttpContext.Connection.Id, _tracer?.ActiveSpan?.Context?.ToString() ?? "",
                Request.Path.ToString(), Culture, resource);
         }
@@ -145,5 +146,5 @@ namespace weping.api.Controllers
 
         private static string FormatLink(string path, string rel)
             => string.IsNullOrWhiteSpace(path) ? string.Empty : $"<{path}>; rel=\"{rel}\",";
-    }
+    }*/
 }

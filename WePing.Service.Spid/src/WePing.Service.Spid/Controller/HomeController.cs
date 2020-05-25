@@ -1,7 +1,10 @@
-﻿using MicroS_Common.Controllers;
+﻿using MicroS_Common;
+using MicroS_Common.Controllers;
 using MicroS_Common.Dispatchers;
 using MicroS_Common.Types;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using System.Threading.Tasks;
 using WePing.domain.ActuFftts.Dto;
 using WePing.domain.ActuFftts.Queries;
@@ -46,16 +49,15 @@ namespace WePing.Service.Spid.Controller
     [Route("")]
     public class HomeController : BaseController
     {
-        public HomeController(IDispatcher dispatcher) : base(dispatcher)
+        public HomeController(
+            IDispatcher dispatcher,
+            IConfiguration config,
+            IOptions<AppOptions> appOptions) : 
+            base(dispatcher,config,appOptions)
         {
             
         }
-        /// <summary>
-        /// Get The  name of this service
-        /// </summary>
-        /// <returns>Return The  name of this service</returns>
-        [HttpGet]
-        public IActionResult Get() => Ok("WePing Spid Service");
+
 
         /// <summary>
         /// Get list of Clubs
